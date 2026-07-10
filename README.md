@@ -2,7 +2,7 @@
 
 # ComPDF Self-hosted — Open Source PDF Editor & PDF Converter
 
-[ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) (Part of the KDAN ecosystem) enables rapid on-premises deployment via Docker containers, empowering you to seamlessly edit, convert, and process documents across various formats, including PDF, Office, HTML, TXT, CSV, RTF, JSON, and images.
+Part of the KDAN ecosystem, [ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_selfhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_selfhosted_newopen_en&ref_platform_id=github_compdf) offers PDF editing and document conversion, helping teams process PDFs, Office files, and images securely in private Docker deployments.
 
 
 
