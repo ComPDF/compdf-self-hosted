@@ -2,7 +2,7 @@
 
 # ComPDF Self-hosted — 开源 PDF 编辑器与 PDF 转换器
 
-通过 [ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh) (KDAN 生态），可快速完成基于 Docker 容器的私有化部署，实现编辑、转换和处理 PDF、Office 格式、HTML、TXT、CSV、RTF、JSON 及图片等文档。
+作为 KDAN 生态的一部分，[ComPDF Self-Hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh) 提供自托管 PDF 编辑与文档转换能力，帮助团队在私有 Docker 环境中安全处理 PDF、Office 文件与图片。
 
 
 
