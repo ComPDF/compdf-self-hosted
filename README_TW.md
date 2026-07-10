@@ -2,7 +2,7 @@
 
 # ComPDF Self-hosted — 開源 PDF 編輯器與 PDF 轉檔工具
 
-透過 [ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)（KDAN 生態系），可快速完成採用 Docker 容器的私有化部署，實現編輯、轉換和處理 PDF、Office 格式、HTML、TXT、CSV、RTF、JSON 及圖片等文件。
+透過 [ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_sefhosted_newopen_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_tw&ref_platform_id=github_compdf_tw)（KDAN 生態系），可快速完成採用 Docker 容器的私有化部署，實現編輯、轉換和處理 PDF、Office 格式、HTML、TXT、CSV、RTF、JSON 及圖片等文件。
 
 
 
@@ -108,7 +108,7 @@ Dashboard:  http://localhost:8080/admin
 如需使用正式版授權，請將申請到的正式 License Key 替換到 `.env` 檔案中的
 `COMPDF_LICENSE_KEY` 欄位。License Key 修改後需要重新啟動服務以生效。
 
-**[申請正式版授權](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)，可獲得以下權益：**
+**[申請正式版授權](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_tw&ref_platform_id=github_compdf_tw)，可獲得以下權益：**
 
 * 無浮水印文件處理
 * 無文件頁數限制
@@ -132,7 +132,7 @@ Server API 地址：
 http://localhost:8080/api/v1/
 ```
 
-也可查看[文檔](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)
+也可查看[文檔](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_tw&ref_platform_id=github_compdf_tw)
 
 開啟 ComPDF Web 和 Dashboard：
 
@@ -161,7 +161,7 @@ docker compose logs -f compdf-server
 docker compose -f docker-compose.yml up -d --build compdf-infra compdf-app compdf-server
 ```
 
-以上功能均可於 [ComPDF](https://www.compdf.com/?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw) 上體驗使用，→ [體驗地址](https://www.compdf.com/pdf-tools?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)
+以上功能均可於 [ComPDF](https://www.compdf.com/?utm_source=github_ai_sefhosted_newopen_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_tw&ref_platform_id=github_compdf_tw) 上體驗使用，→ [體驗地址](https://www.compdf.com/pdf-tools?utm_source=github_ai_sefhosted_newopen_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_tw&ref_platform_id=github_compdf_tw)
 
 <a id="architecture"></a>
 
@@ -170,7 +170,7 @@ docker compose -f docker-compose.yml up -d --build compdf-infra compdf-app compd
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
 │                              Browser                               │
-│          生產環境造訪 / 使用 ComPDF Web，造訪 /admin 使用 Dashboard       │
+│          生產環境造訪 / 使用 ComPDF Web，造訪 /admin 使用 Dashboard  │
 └───────────────────────────────┬────────────────────────────────────┘
                                 │
                                 │ HTML/CSS/JS + HTTP /api/v1/*
@@ -212,7 +212,7 @@ docker compose -f docker-compose.yml up -d --build compdf-infra compdf-app compd
 
 ## 升級至企業版
 
-[聯絡銷售團隊](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)以升級至 **Enterprise** 版。
+[聯絡銷售團隊](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_tw&ref_platform_id=github_compdf_tw)以升級至 **Enterprise** 版。
 
 | 功能     | 免費版 | 企業版 |
 | ------ | --- | --- |
@@ -228,17 +228,11 @@ docker compose -f docker-compose.yml up -d --build compdf-infra compdf-app compd
 
 ## 文檔
 
-### 開發文檔
+- 開發文檔：[https://www.compdf.com/documentation](https://www.compdf.com/documentation?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)
 
-https://www.compdf.com/documentation?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw
+- API Reference：[https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)
 
-### API Reference
-
-https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw
-
-### SDK 文檔
-
-https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw
+- SDK 文檔：[https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_open_tw&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_tw&ref_platform_id=github_compdfkit_tw)
 
 <a id="support"></a>
 
