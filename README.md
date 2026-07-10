@@ -2,7 +2,7 @@
 
 # ComPDF Self-hosted — Open Source PDF Editor & PDF Converter
 
-[ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en) (Part of the KDAN ecosystem) enables rapid on-premises deployment via Docker containers, empowering you to seamlessly edit, convert, and process documents across various formats, including PDF, Office, HTML, TXT, CSV, RTF, JSON, and images.
+[ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) (Part of the KDAN ecosystem) enables rapid on-premises deployment via Docker containers, empowering you to seamlessly edit, convert, and process documents across various formats, including PDF, Office, HTML, TXT, CSV, RTF, JSON, and images.
 
 
 
@@ -23,7 +23,7 @@
   <a href="#upgrade-to-enterprise"><b>Upgrade to Enterprise</b></a> •
    <a href="#support"><b>support</b></a> •
   <a href="#license"><b>License</b></a> •
-  <a href="https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en" target="_blank"><b>Enterprise →</b></a>
+  <a href="https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en" target="_blank"><b>Enterprise →</b></a>
 </p>
 
 ## Why ComPDF Self-hosted?
@@ -67,7 +67,7 @@ ComPDF Self-hosted provides a unified management console for viewing API Key det
 
 * Account Management: Set the user name and password.
 
-* System Settings: Set the name, logo, theme color of the system.
+* System Settings: Set the name, logo, and theme color of the system.
 
 <a id="quick-start"></a>
 
@@ -111,7 +111,7 @@ The dashboard ships with a default administrator account on first deployment:
 To use an Enterprise license, replace `COMPDF_LICENSE_KEY` in `.env` with the
 issued License Key. Restart the services after updating the License Key.
 
-**[Apply for the Enterprise version](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en) to obtain the following benefits:**
+**[Apply for the Enterprise version](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) to obtain the following benefits:**
 
 * Watermark-free document processing
 * No limit on the number of document pages processed
@@ -129,13 +129,13 @@ docker compose -f docker-compose.dev.yml up -d --build compdf-infra compdf-app c
 docker compose -f docker-compose.dev.yml ps
 ```
 
-Server API url:
+Server API URL:
 
 ```text
 http://localhost:8080/api/v1/
 ```
 
-You can also view the [Documentation](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en).
+You can also view the [Documentation](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en).
 
 Open ComPDF Web and Dashboard:
 
@@ -155,17 +155,13 @@ The production deployment stores persistent data in Docker volumes and mounts `.
 
 ### 4. Build the production image from source
 
-Keep this path when you changed local source code and need to package a new
-production `compdf-server` image from the root `Dockerfile`. The Dockerfile
-builds ComPDF Web and Dashboard from `frontend/compdf-web`, copies the static
-assets into `/app/public/compdf-web`, builds the server, and serves pages and
-APIs together on port `8080`.
+Keep this path when you have changed the local source code and need to package a new production `compdf-server` image from the root `Dockerfile`. The Dockerfile builds ComPDF Web and Dashboard from `frontend/compdf-web`, copies the static assets into `/app/public/compdf-web`, builds the server, and serves pages and APIs together on port `8080`.
 
 ```bash
 docker compose -f docker-compose.yml up -d --build compdf-infra compdf-app compdf-server
 ```
 
-All features above come with [ComPDF](https://www.compdf.com/?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en) — check them out [here](https://www.compdf.com/pdf-tools?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en).
+All features above come with [ComPDF](https://www.compdf.com/?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) — check them out [here](https://www.compdf.com/pdf-tools?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en).
 
 <a id="architecture"></a>
 
@@ -216,7 +212,7 @@ consistent with the deployment topology.
 
 ## Upgrade to Enterprise
 
-[Contact sales](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en) to update to the **Enterprise Edition**.
+[Contact sales](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) to update to the **Enterprise Edition**.
 
 | Feature               | Free Edition | Enterprise |
 | --------------------- | ------------ | ---------- |
@@ -232,17 +228,11 @@ consistent with the deployment topology.
 
 ## Documentation
 
-### Deployment Guide
+- Deployment Guide: [https://www.compdf.com/documentation](https://www.compdf.com/documentation?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en)
 
-https://www.compdf.com/documentation?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en
+- API Reference: [https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en)
 
-### API Reference
-
-https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en
-
-### SDK Documentation
-
-https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en
+- SDK Documentation: [https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en)
 
 ## Support
 
@@ -252,13 +242,13 @@ Have suggestions? [Start a discussion](https://github.com/ComPDF/compdf-self-hos
 
 - This project is licensed under the MIT License. See the LICENSE file for details.
 
-- [Contact Sales](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en) for the Commercial / Enterprise licenses for ComPDF Self-hosted.
+- [Contact Sales](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) for the Commercial / Enterprise licenses for ComPDF Self-hosted.
 
 ---
 
 <p align="center">
   <b>Built by the ComPDF team.</b><br>
-  <a href="https://compdf.com?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en">Website</a> ·
-  <a href="https://www.compdf.com/guides/idp/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en">Docs</a> ·
-  <a href="https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_open_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_open_en&ref_platform_id=github_compdfkit_en">Enterprise Inquiries</a>
+  <a href="https://compdf.com?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en">Website</a> ·
+  <a href="https://www.compdf.com/guides/idp/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en">Docs</a> ·
+  <a href="https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en">Enterprise Inquiries</a>
 </p>
