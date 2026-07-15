@@ -14,23 +14,19 @@
  * interceptor below unwraps `data` so call sites see the payload directly.
  * File-download responses (Blob) don't match the envelope shape and pass through.
  *
- * The server's AllExceptionsFilter returns errors in the matching shape:
- * `{ code, msg, data:null, traceId?, errorCode? }`.
+ * The server's AllExceptionsFilter returns errors as
+ * `{ code, errorCode, message, traceId }`; HTTP status remains separate.
  * File-returning endpoints are fetched with responseType:'blob'; a non-2xx blob
  * is re-read as JSON to extract the normalized error.
  */
 import axios, { AxiosError, type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 
 export interface ApiError {
-  /** HTTP status code / API code returned by the server. */
-  code?: string;
-  /** String business code (local thrown code or conversion-engine errorCode). */
+  /** Six-digit business code returned by the server or processing SDK. */
+  code?: number;
   errorCode?: string;
-  /** Upstream SDK 6-digit numeric code (upstream errors only). */
-  bizCode?: number;
   message: string;
   traceId?: string;
-  details?: unknown;
 }
 
 type ApiBaseEnv = {
@@ -141,21 +137,7 @@ http.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 });
 
 http.interceptors.response.use(
-  (response) => {
-    // Unwrap the server's success envelope `{ code:200, msg:'success', data }`
-    // so call sites see the payload directly. Blob/HTML responses don't match
-    // the envelope shape and pass through untouched.
-    const body = response?.data;
-    const code = (body as { code?: unknown } | undefined)?.code;
-    const isSuccessCode = code === 200 || (typeof code === 'string' && /^2\d\d$/.test(code));
-    if (body && typeof body === 'object' && !Array.isArray(body)
-      && isSuccessCode
-      && (body as { msg?: unknown }).msg === 'success'
-      && 'data' in body) {
-      response.data = (body as { data: unknown }).data;
-    }
-    return response;
-  },
+  processApiResponse,
   (err) => {
     if (err?.response?.status === 401) {
       const url: string | undefined = err.config?.url;
@@ -170,6 +152,68 @@ http.interceptors.response.use(
     return Promise.reject(err);
   },
 );
+
+/**
+ * Distinguish an HTTP 200 processing error from a successful API response.
+ * Download endpoints use responseType=blob, so JSON errors must be decoded
+ * before they can re-enter the normal Axios rejection path.
+ */
+export async function processApiResponse(response: AxiosResponse): Promise<AxiosResponse> {
+  let body = response?.data;
+
+  if (body instanceof Blob && isJsonBlobResponse(response, body)) {
+    const parsed = await parseBlobJson(body);
+    if (isBusinessErrorBody(parsed)) {
+      body = parsed;
+      response = { ...response, data: parsed };
+    }
+  }
+
+  if (isBusinessErrorBody(body)) {
+    throw new AxiosError(
+      body.message,
+      AxiosError.ERR_BAD_RESPONSE,
+      response.config,
+      response.request,
+      response,
+    );
+  }
+
+  // Unwrap the server's success envelope `{ code:200, msg:'success', data }`
+  // so call sites see the payload directly. Binary responses pass through.
+  const code = (body as { code?: unknown } | undefined)?.code;
+  const isSuccessCode = code === 200 || (typeof code === 'string' && /^2\d\d$/.test(code));
+  if (body && typeof body === 'object' && !Array.isArray(body)
+    && isSuccessCode
+    && (body as { msg?: unknown }).msg === 'success'
+    && 'data' in body) {
+    response.data = (body as { data: unknown }).data;
+  }
+  return response;
+}
+
+function isBusinessErrorBody(body: unknown): body is {
+  code: number;
+  errorCode: string;
+  message: string;
+  traceId: string;
+} {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
+  const value = body as Record<string, unknown>;
+  return typeof value.code === 'number'
+    && value.code !== 200
+    && typeof value.errorCode === 'string'
+    && typeof value.message === 'string'
+    && typeof value.traceId === 'string';
+}
+
+function isJsonBlobResponse(response: AxiosResponse, body: Blob): boolean {
+  const headers = response.headers as Record<string, unknown> | undefined;
+  const contentType = typeof headers?.['content-type'] === 'string'
+    ? headers['content-type']
+    : '';
+  return contentType.includes('json') || body.type.includes('json');
+}
 
 /**
  * Defensive guard: a wrong current password on /auth/change-password is a
@@ -195,7 +239,7 @@ export async function toApiError(err: unknown): Promise<ApiError> {
     if (parsed && typeof parsed === 'object') return normalizeApiErrorBody(parsed as Record<string, unknown>);
     return { message: 'Request failed. Please try again later.' };
   }
-  if (body && typeof body === 'object' && (typeof body.msg === 'string' || typeof body.message === 'string')) {
+  if (body && typeof body === 'object' && typeof body.message === 'string') {
     return normalizeApiErrorBody(body as Record<string, unknown>);
   }
   if (ax?.message) return { message: ax.message };
@@ -212,17 +256,14 @@ async function parseBlobJson(body: Blob): Promise<unknown | null> {
 }
 
 function normalizeApiErrorBody(body: Record<string, unknown>): ApiError {
-  const msg = typeof body.msg === 'string' ? body.msg
-    : typeof body.message === 'string' ? body.message
+  const message = typeof body.message === 'string' ? body.message
     : 'Request failed. Please try again later.';
-  const code = body.code;
+  const code = Number(body.code);
   return {
-    code: typeof code === 'number' ? String(code) : (code as string | undefined),
+    code: Number.isFinite(code) ? code : undefined,
     errorCode: typeof body.errorCode === 'string' ? body.errorCode : undefined,
-    bizCode: typeof body.bizCode === 'number' ? body.bizCode : undefined,
-    message: msg,
+    message,
     traceId: typeof body.traceId === 'string' ? body.traceId : undefined,
-    details: body.details,
   };
 }
 

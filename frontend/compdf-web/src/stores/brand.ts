@@ -7,6 +7,9 @@
 import { defineStore } from 'pinia';
 import { applyBrandTheme } from '@/lib/theme';
 
+export const DEFAULT_LOGO_URL = '/logo.svg';
+export const DEFAULT_DOCUMENTATION_URL = 'https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/get-started';
+
 export interface BrandConfig {
   siteName: string;
   logoUrl: string | null;
@@ -30,12 +33,12 @@ interface WindowWithBrand extends Window {
 
 const FALLBACK: BrandConfig = {
   siteName: 'ComPDF Self-Hosted',
-  logoUrl: null,
+  logoUrl: DEFAULT_LOGO_URL,
   themeColor: '#1668ff',
   locale: 'en',
   darkMode: false,
   upgradeBannerText: null,
-  docUrl: null,
+  docUrl: DEFAULT_DOCUMENTATION_URL,
   contactUrl: null,
   compdfToolsEnabled: true,
   licenseType: 'UNKNOWN',
@@ -67,7 +70,14 @@ export const useBrandStore = defineStore('brand', {
   },
   actions: {
     load() {
-      this.config = (window as WindowWithBrand).COMPDF_CONFIG ?? null;
+      const injected = (window as WindowWithBrand).COMPDF_CONFIG;
+      this.config = injected
+        ? {
+            ...injected,
+            logoUrl: injected.logoUrl ?? DEFAULT_LOGO_URL,
+            docUrl: injected.docUrl ?? DEFAULT_DOCUMENTATION_URL,
+          }
+        : null;
       const stored = getStoredTheme();
       this.dark = stored ? stored === 'dark' : this.c.darkMode;
       this.apply();

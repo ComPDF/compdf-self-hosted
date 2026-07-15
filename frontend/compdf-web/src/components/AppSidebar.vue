@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { LayoutDashboard, ScrollText, UserCheck, Settings, FileText } from 'lucide-vue-next';
-import { useBrandStore } from '@/stores/brand';
+import { LayoutDashboard, ScrollText, UserCheck, Settings } from 'lucide-vue-next';
+import { DEFAULT_LOGO_URL, useBrandStore } from '@/stores/brand';
 
 const { t } = useI18n();
 const brand = useBrandStore();
@@ -21,10 +21,7 @@ const systemItems = [
   >
     <!-- Brand -->
     <div class="px-6 mb-8 flex items-center gap-3">
-      <img v-if="brand.c.logoUrl" :src="brand.c.logoUrl" alt="" class="w-8 h-8 rounded-lg object-contain" />
-      <div v-else class="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-white">
-        <FileText :size="18" />
-      </div>
+      <img :src="brand.c.logoUrl ?? DEFAULT_LOGO_URL" alt="" class="w-8 h-8" />
       <h1 class="font-sans text-lg font-bold text-brand-on-surface leading-tight truncate">
         {{ brand.c.siteName || 'ComPDF Engine' }}
       </h1>

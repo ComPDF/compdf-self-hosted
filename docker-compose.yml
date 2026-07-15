@@ -8,9 +8,9 @@ services:
       RUSTFS_ACCESS_KEY: compdfkit-ak
       RUSTFS_SECRET_KEY: compdfkit-sk-2026
     volumes:
-      - ./data/mysql:/var/lib/mysql
-      - ./data/redis:/data/redis
-      - ./data/rustfs:/data
+      - compdf_mysql_data:/var/lib/mysql
+      - compdf_redis_data:/data/redis
+      - compdf_rustfs_data:/data
     mem_limit: 3g
     restart: unless-stopped
     networks:
@@ -40,8 +40,8 @@ services:
       - "9903:9903"
     volumes:
       - ./fonts/windows:/opt/compdf_sdk/fonts/windows:ro
-      - ./data/output:/tmp/compdf_output
-      - ./data/pdf:/data
+      - compdf_output:/tmp/compdf_output
+      - compdf_pdf_data:/data
     restart: unless-stopped
     mem_limit: 16g
     networks:
@@ -81,6 +81,13 @@ services:
       timeout: 5s
       retries: 12
       start_period: 30s
+
+volumes:
+  compdf_output:
+  compdf_redis_data:
+  compdf_pdf_data:
+  compdf_mysql_data:
+  compdf_rustfs_data:
 
 networks:
   compdf-internal:

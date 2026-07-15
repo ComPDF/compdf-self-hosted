@@ -1,16 +1,13 @@
 /**
  * AllExceptionsFilter — single normalization point for ALL errors leaving the
- * server. Every error response uses the project's standard envelope shape:
- * `{ code, msg, data: null, [errorCode?, bizCode?, traceId?, details?] }`.
+ * server. SDK business errors use HTTP 200; server errors keep their 4xx/5xx
+ * status. The JSON body always uses:
+ * `{ code, errorCode, message, traceId }`.
  *
- * `code` is ALWAYS the HTTP status code as a string (e.g. '400', '401', '502').
- * Business codes are carried in dedicated fields so clients can branch on them:
- *   - `errorCode` — string business code. For local HttpExceptions it's the
- *     thrown `{ code }` payload (e.g. 'TASK_NOT_READY', 'VALIDATION_ERROR');
- *     for conversion-engine upstream errors it's the upstream `errorCode`;
- *     for PDF SDK errors it is derived from the upstream numeric `code`.
- *   - `bizCode` — the upstream SDK's 6-digit numeric code (e.g. 110001, 100104),
- *     present only for upstream errors (both dialects).
+ * `code` is the six-digit business code. SDK errors preserve the upstream
+ * numeric code; server errors map their semantic errorCode to the same ranges.
+ * PDF SDK errors do not carry errorCode, so it is derived from the documented
+ * PDF SDK code table. Conversion errors preserve the upstream errorCode.
  *
  * Handles BOTH upstream dialects (docs/sdk-contract.md §4, correction #4):
  *   PDF SDK errors:     { code, message, traceId }            — NO errorCode
@@ -21,22 +18,17 @@
  */
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
-import { ErrorCode, semanticErrorCodeForBizCode } from '../errors/error-codes';
+import { randomUUID } from 'crypto';
+import { ErrorCode, numericCodeForServerError, semanticErrorCodeForBizCode } from '../errors/error-codes';
 import { UpstreamSdkError } from '../errors/upstream-sdk.error';
 
 export interface NormalizedError {
   statusCode: number;
   body: {
-    /** HTTP status code as a string (e.g. '400', '502'). */
-    code: string;
-    msg: string;
-    data: null;
-    /** String business code (local thrown code or conversion-engine errorCode). */
-    errorCode?: string;
-    /** Upstream SDK 6-digit numeric code (upstream errors only). */
-    bizCode?: number;
-    traceId?: string;
-    details?: unknown;
+    code: number;
+    errorCode: string;
+    message: string;
+    traceId: string;
   };
 }
 
@@ -50,7 +42,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const { statusCode, body } = AllExceptionsFilter.toResponse(exception);
 
     if (statusCode >= 500) {
-      this.logger.error(`${body.code} ${body.errorCode ?? ''}: ${body.msg}`, exception instanceof Error ? exception.stack : undefined);
+      this.logger.error(`${body.code} ${body.errorCode}: ${body.message}`, exception instanceof Error ? exception.stack : undefined);
     }
     res.status(statusCode).json(body);
   }
@@ -67,32 +59,31 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return {
       statusCode: 500,
       body: {
-        code: '500',
-        msg: 'internal server error',
-        data: null,
+        code: 190999,
         errorCode: ErrorCode.INTERNAL_ERROR,
-        details: process.env.NODE_ENV === 'development' && exception instanceof Error
-          ? { name: exception.name }
-          : undefined,
+        message: 'Internal server error.',
+        traceId: createTraceId(),
       },
     };
   }
 
   private static normalizeUpstream(err: UpstreamSdkError): NormalizedError {
-    // Pass the client-facing HTTP status through (4xx
-    // stays actionable), but surface upstream 5xx as 502 bad gateway.
-    const statusCode = err.status >= 500 ? 502 : err.status >= 400 ? err.status : 502;
-    const body: NormalizedError['body'] = {
-      code: String(statusCode),
-      msg: err.message,
-      data: null,
-      bizCode: err.code,
-      traceId: err.traceId,
-    };
-    body.errorCode = err.errorCode
+    // Processing SDK failures are business errors. Keep their numeric code in
+    // the response body and avoid exposing them as abnormal HTTP statuses.
+    const statusCode = 200;
+    const code = err.code > 0 ? err.code : 190999;
+    const errorCode = err.errorCode
       ?? semanticErrorCodeForBizCode(err.code, err.isConversion ? 'conversion' : 'pdf')
       ?? ErrorCode.UPSTREAM_ERROR;
-    return { statusCode, body };
+    return {
+      statusCode,
+      body: {
+        code,
+        errorCode,
+        message: englishUpstreamMessage(err.message, errorCode),
+        traceId: err.traceId ?? createTraceId(),
+      },
+    };
   }
 
   private static normalizeHttp(err: HttpException): NormalizedError {
@@ -101,26 +92,24 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     // ValidationPipe BadRequest: resp may be { message: ValidationError[], error, statusCode }
     if (status === 400 && Array.isArray((resp as any)?.message)) {
-      const details = flattenValidation((resp as any).message);
       return {
         statusCode: 400,
-        body: { code: '400', msg: 'validation failed', data: null, errorCode: ErrorCode.VALIDATION_ERROR, details },
+        body: serverErrorBody(400, ErrorCode.VALIDATION_ERROR, validationMessage((resp as any).message)),
       };
     }
 
-    // Our own thrown HttpExceptions carry a { code, message } payload (e.g.
-    // ConflictException({ code: 'TASK_NOT_READY', message })). `code` becomes the
-    // HTTP status; the thrown business code moves to `errorCode`.
+    // Our own HttpExceptions carry a semantic { code, message } payload. The
+    // semantic code becomes errorCode and maps to a six-digit numeric code.
     if (resp && typeof resp === 'object' && !Array.isArray(resp)) {
       const r = resp as Record<string, unknown>;
       const errorCode = typeof r.code === 'string' ? r.code : httpCodeFor(status);
-      const msg = typeof r.message === 'string' ? r.message : err.message;
-      return { statusCode: status, body: { code: String(status), msg, data: null, errorCode, details: r.details } };
+      const message = typeof r.message === 'string' ? r.message : err.message;
+      return { statusCode: status, body: serverErrorBody(status, errorCode, message) };
     }
 
     return {
       statusCode: status,
-      body: { code: String(status), msg: typeof resp === 'string' ? resp : err.message, data: null, errorCode: httpCodeFor(status) },
+      body: serverErrorBody(status, httpCodeFor(status), typeof resp === 'string' ? resp : err.message),
     };
   }
 }
@@ -132,16 +121,55 @@ function httpCodeFor(status: number): string {
     case 403: return ErrorCode.FORBIDDEN;
     case 404: return ErrorCode.NOT_FOUND;
     case 409: return ErrorCode.CONFLICT;
+    case 408:
+    case 504: return ErrorCode.REQUEST_TIMEOUT;
+    case 413: return ErrorCode.FILE_TOO_LARGE;
     case 429: return ErrorCode.CONCURRENCY_LIMIT;
     default: return ErrorCode.INTERNAL_ERROR;
   }
 }
 
-function flattenValidation(messages: unknown[]): Array<Record<string, unknown>> {
-  return messages.map((m) => {
+function validationMessage(messages: unknown[]): string {
+  const parts = messages.flatMap((m): string[] => {
     if (m instanceof ValidationError) {
-      return { property: m.property, constraints: m.constraints };
+      return m.constraints ? Object.values(m.constraints) : [`${m.property} is invalid`];
     }
-    return { message: typeof m === 'string' ? m : String(m) };
+    return [typeof m === 'string' ? m : String(m)];
   });
+  return parts.join('; ') || 'Validation failed.';
 }
+
+function serverErrorBody(status: number, errorCode: string, message: string): NormalizedError['body'] {
+  return {
+    code: numericCodeForServerError(errorCode, status),
+    errorCode,
+    message,
+    traceId: createTraceId(),
+  };
+}
+
+function createTraceId(): string {
+  return randomUUID().replace(/-/g, '');
+}
+
+function englishUpstreamMessage(message: string, errorCode: string): string {
+  if (!/[\u3400-\u9fff]/u.test(message)) return message;
+  return ENGLISH_UPSTREAM_MESSAGES[errorCode] ?? 'The processing service request failed.';
+}
+
+const ENGLISH_UPSTREAM_MESSAGES: Readonly<Record<string, string>> = {
+  INTERNAL_ERROR: 'The processing service encountered an internal error.',
+  UPSTREAM_ERROR: 'The processing service request failed.',
+  CONVERT_FAILED: 'Document conversion failed.',
+  SDK_PROCESS_FAILED: 'PDF processing failed.',
+  FILE_TOO_LARGE: 'The file exceeds the service size limit.',
+  PDF_PASSWORD_ERROR: 'The PDF password is incorrect or missing.',
+  INVALID_PASSWORD: 'The PDF password is incorrect.',
+  REQUEST_TIMEOUT: 'The processing request timed out.',
+  JOB_TIMEOUT: 'Document conversion timed out.',
+  SYNC_WAIT_TIMEOUT: 'The synchronous processing request timed out.',
+  LICENSE_EXPIRED: 'The processing license has expired.',
+  LICENSE_INVALID: 'The processing license is invalid.',
+  LICENSE_MISSING: 'The processing license is missing.',
+  CONCURRENCY_EXCEEDED: 'The processing concurrency limit has been reached.',
+};

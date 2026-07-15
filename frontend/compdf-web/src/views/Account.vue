@@ -56,8 +56,10 @@ async function saveUsername() {
     usernameError.value = t('account.usernameEmpty');
     return;
   }
+  if (editingUsername.value.trim() === auth.username) return;
   try {
-    await dashboardApi.updateAccount(editingUsername.value.trim());
+    const session = await dashboardApi.updateAccount(editingUsername.value.trim());
+    auth.replaceSession(session);
     displayToast(t('account.usernameUpdated'));
   } catch {
     usernameError.value = t('account.usernameUpdateFailed');

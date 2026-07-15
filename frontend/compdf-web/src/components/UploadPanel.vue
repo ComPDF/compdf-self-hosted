@@ -20,6 +20,7 @@ import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { AxiosProgressEvent, AxiosResponse } from 'axios';
 import { apiClient, downloadBlob, toApiError } from '@/api/client';
+import { apiErrorTranslationKey } from '@/api/error-localization';
 import { toolI18nKey } from '@/config/i18n-keys';
 import {
   buildRequest,
@@ -137,92 +138,6 @@ const PDF_ACTION_PROGRESS_KEYS: Record<string, string> = {
   'remove-watermark': 'pdfToolDetail.upload.removingWatermark',
   encrypt: 'pdfToolDetail.upload.encrypting',
   decrypt: 'pdfToolDetail.upload.decrypting',
-};
-
-const API_ERROR_CODE_KEYS: Record<string, string> = {
-  INVALID_REQUEST: 'invalidRequest',
-  INVALID_ARGUMENT: 'invalidArgument',
-  INVALID_JSON: 'invalidJson',
-  CONFLICTING_ARGUMENTS: 'conflictingArguments',
-  INVALID_FILE_TYPE: 'invalidFileType',
-  FILE_REQUIRED: 'fileRequired',
-  FILE_COUNT_MISMATCH: 'fileCountMismatch',
-  FILE_TOO_LARGE: 'fileTooLargeAsync',
-  PAGE_LIMIT_EXCEEDED: 'pageLimitExceeded',
-  INVALID_OUTPUT_FILE_NAME: 'invalidOutputFileName',
-  INVALID_PAGE_RANGE: 'invalidPageRange',
-  INVALID_PAGE_INDEX: 'invalidPageIndex',
-  INVALID_RECT: 'invalidRect',
-  PAGE_RANGE_EMPTY: 'pageRangeEmpty',
-  PASSWORD_REQUIRED: 'passwordRequired',
-  INVALID_PASSWORD: 'invalidPassword',
-  INVALID_TOKEN: 'invalidToken',
-  AUTH_REQUIRED: 'authRequired',
-  NOT_FOUND: 'notFound',
-  JOB_NOT_READY: 'jobNotReady',
-  INVALID_STATE: 'invalidState',
-  CONVERSION_FAILED: 'convertFailed',
-  CONVERT_FAILED: 'convertFailed',
-  PDF_PASSWORD_ERROR: 'pdfPasswordError',
-  PDF_FORMAT_ERROR: 'pdfFormatError',
-  PDF_SECURITY_ERROR: 'pdfSecurityError',
-  OCR_FAILURE: 'ocrFailure',
-  JOB_TIMEOUT: 'jobTimeout',
-  REQUEST_TIMEOUT: 'jobTimeout',
-  NO_TABLE: 'noTable',
-  OUT_OF_MEMORY: 'outOfMemory',
-  SDK_FILE_ERROR: 'fileError',
-  IMAGE_INVALID: 'imageInvalid',
-  INTERNAL_ERROR: 'internalError',
-  UPSTREAM_ERROR: 'processFailed',
-  BAD_REQUEST: 'invalidRequest',
-  VALIDATION_ERROR: 'paramValidation',
-  FILE_EMPTY: 'fileEmpty',
-  FILE_FORMAT_ERROR: 'fileFormatError',
-  UNSUPPORTED_FORMAT: 'unsupportedFormat',
-  UNSUPPORTED_IMAGE_FORMAT: 'unsupportedImageFormat',
-  FILE_ENCRYPTED: 'fileEncrypted',
-  FILE_OPEN_FAILED: 'fileOpenFailed',
-  FILE_PROCESS_FAILED: 'fileProcessFailed',
-  SDK_PROCESS_FAILED: 'processFailed',
-  TEMP_FILE_WRITE_FAILED: 'processFailed',
-  TEMP_FILE_READ_FAILED: 'processFailed',
-  ICC_PROFILE_REQUIRED: 'paramValidation',
-  ICC_PROFILE_INVALID: 'paramValidation',
-  INVALID_QUAD_RECTS: 'invalidRect',
-};
-
-const API_NUMERIC_CODE_KEYS: Record<number, string> = {
-  100001: 'invalidRequest',
-  100002: 'invalidJson',
-  100003: 'conflictingArguments',
-  100101: 'invalidFileType',
-  100102: 'fileRequired',
-  100103: 'fileCountMismatch',
-  100104: 'fileTooLargeAsync',
-  100105: 'pageLimitExceeded',
-  100106: 'invalidOutputFileName',
-  110001: 'invalidPageRange',
-  110002: 'invalidPageIndex',
-  110003: 'invalidRect',
-  110005: 'pageRangeEmpty',
-  120001: 'passwordRequired',
-  120002: 'invalidPassword',
-  140001: 'authRequired',
-  140002: 'invalidToken',
-  150001: 'notFound',
-  150002: 'jobNotReady',
-  150003: 'invalidState',
-  190001: 'convertFailed',
-  190002: 'pdfPasswordError',
-  190003: 'pdfFormatError',
-  190004: 'pdfSecurityError',
-  190005: 'ocrFailure',
-  190006: 'jobTimeout',
-  190007: 'noTable',
-  190008: 'outOfMemory',
-  190009: 'fileError',
-  190010: 'imageInvalid',
 };
 
 const convertButtonLabel = computed(() => (
@@ -557,14 +472,7 @@ function apiErrorMessage(error: Awaited<ReturnType<typeof toApiError>>): string 
 }
 
 function apiErrorKey(error: Awaited<ReturnType<typeof toApiError>>): string | null {
-  if (error.errorCode && API_ERROR_CODE_KEYS[error.errorCode]) {
-    return API_ERROR_CODE_KEYS[error.errorCode];
-  }
-  // Upstream SDK numeric business code lives in `bizCode` (code is the HTTP status).
-  if (typeof error.bizCode === 'number' && API_NUMERIC_CODE_KEYS[error.bizCode]) {
-    return API_NUMERIC_CODE_KEYS[error.bizCode];
-  }
-  return null;
+  return apiErrorTranslationKey(error, props.endpoint.kind === 'pdf' ? 'pdf' : 'conversion');
 }
 
 function downloadFile() {

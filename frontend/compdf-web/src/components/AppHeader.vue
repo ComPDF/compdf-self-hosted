@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
+import { FileText } from 'lucide-vue-next';
 import LangSwitch from '@/components/LangSwitch.vue';
-import { useBrandStore } from '@/stores/brand';
+import { DEFAULT_DOCUMENTATION_URL, DEFAULT_LOGO_URL, useBrandStore } from '@/stores/brand';
 
 const { t } = useI18n();
 const brand = useBrandStore();
@@ -11,18 +12,18 @@ const brand = useBrandStore();
   <header class="app-header">
     <div class="header-left">
       <RouterLink to="/" class="brand">
-        <img :src="brand.c.logoUrl ?? '/logo.svg'" alt="" class="brand-mark" />
+        <img :src="brand.c.logoUrl ?? DEFAULT_LOGO_URL" alt="" class="brand-mark" />
         <span class="brand-name">{{ brand.c.siteName }}</span>
       </RouterLink>
       <span class="divider"></span>
       <a
-        v-if="brand.c.docUrl"
         class="docs-link"
-        :href="brand.c.docUrl"
+        :href="brand.c.docUrl ?? DEFAULT_DOCUMENTATION_URL"
         target="_blank"
-        rel="noopener"
+        rel="noopener noreferrer"
       >
-        {{ t('appHeader.documentation') }}
+        <FileText :size="15" aria-hidden="true" />
+        <span>{{ t('appHeader.documentation') }}</span>
       </a>
     </div>
     <div class="header-right">
@@ -78,6 +79,9 @@ const brand = useBrandStore();
   background: rgba(10, 13, 28, 0.12);
 }
 .docs-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: #52555f;
   font-size: 14px;
   text-decoration: none;

@@ -109,8 +109,8 @@ export class TaskController {
     if (!info) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'task not found' });
     }
-    // 409 → ConflictException → AllExceptionsFilter envelopes it as
-    // { code: 'TASK_NOT_READY', msg, data: null }.
+    // 409 remains the HTTP status; AllExceptionsFilter maps TASK_NOT_READY to
+    // the standard numeric error response.
     throw new ConflictException({ code: 'TASK_NOT_READY', message: `task status is ${info.status}` });
   }
 }

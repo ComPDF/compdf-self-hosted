@@ -8,6 +8,9 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 const { t } = useI18n();
 
@@ -49,6 +52,18 @@ onMounted(fetchLogs);
 function applySearch() {
   page.value = 1;
   fetchLogs();
+}
+
+function updateLevel(value: unknown) {
+  if (typeof value !== 'string') return;
+  levelFilter.value = value as 'ALL' | LogLevel;
+  applySearch();
+}
+
+function updateTimeRange(value: unknown) {
+  if (typeof value !== 'string') return;
+  timeRange.value = value as LogTimeRange;
+  applySearch();
 }
 
 const totalPages = computed(() => Math.max(1, Math.ceil(total.value / pageSize)));
@@ -124,6 +139,25 @@ function categoryLabel(c: string | null): string {
     default: return c ?? '—';
   }
 }
+
+function displayModule(log: LogEntry): string {
+  return log.feature || log.action || t('logs.defaultModule');
+}
+
+function traceText(log: LogEntry): string {
+  const lines = [
+    `[${formatDateTime(log.createdAt)}] [${log.level}] TYPE: ${log.logType}`,
+    `RESULT: ${log.result ?? 'unknown'}`,
+    `CATEGORY: ${log.resultCategory ?? 'n/a'}`,
+    `METHOD: ${log.method ?? '—'}`,
+    `ENDPOINT: ${log.endpoint ?? '—'}`,
+    `ACTION: ${log.action ?? '—'}`,
+    `TARGET: ${log.target ?? '—'}`,
+    '----------------------------------------',
+    log.stack || log.message || 'No stack trace was captured for this event.',
+  ];
+  return lines.join('\n');
+}
 </script>
 
 <template>
@@ -150,28 +184,30 @@ function categoryLabel(c: string | null): string {
               typeFilter === tf.v ? 'bg-white text-brand-primary font-bold shadow-sm' : 'text-brand-secondary hover:text-brand-on-surface']"
           >{{ tf.l }}</button>
         </div>
-        <select
-          v-model="levelFilter"
-          @change="applySearch"
-          class="text-xs border border-brand-outline-variant/30 rounded-xl px-3 py-2 bg-brand-surface-container-low text-brand-on-surface focus:outline-none focus:border-brand-primary cursor-pointer font-sans"
-        >
-          <option value="ALL">{{ t('logs.levelAll') }}</option>
-          <option value="INFO">{{ t('logs.level.INFO') }}</option>
-          <option value="WARN">{{ t('logs.level.WARN') }}</option>
-          <option value="ERROR">{{ t('logs.level.ERROR') }}</option>
-          <option value="FATAL">{{ t('logs.level.FATAL') }}</option>
-        </select>
-        <select
-          v-model="timeRange"
-          @change="applySearch"
-          class="text-xs border border-brand-outline-variant/30 rounded-xl px-3 py-2 bg-brand-surface-container-low text-brand-on-surface focus:outline-none focus:border-brand-primary cursor-pointer font-sans"
-        >
-          <option value="15m">{{ t('logs.range.15m') }}</option>
-          <option value="1h">{{ t('logs.range.1h') }}</option>
-          <option value="6h">{{ t('logs.range.6h') }}</option>
-          <option value="24h">{{ t('logs.range.24h') }}</option>
-          <option value="custom">{{ t('logs.range.custom') }}</option>
-        </select>
+        <Select :model-value="levelFilter" @update:model-value="updateLevel">
+          <SelectTrigger class="h-9 w-[132px] rounded-xl border-brand-outline-variant/30 bg-brand-surface-container-low text-xs text-brand-on-surface">
+            <SelectValue :placeholder="t('logs.levelAll')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">{{ t('logs.levelAll') }}</SelectItem>
+            <SelectItem value="INFO">{{ t('logs.level.INFO') }}</SelectItem>
+            <SelectItem value="WARN">{{ t('logs.level.WARN') }}</SelectItem>
+            <SelectItem value="ERROR">{{ t('logs.level.ERROR') }}</SelectItem>
+            <SelectItem value="FATAL">{{ t('logs.level.FATAL') }}</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select :model-value="timeRange" @update:model-value="updateTimeRange">
+          <SelectTrigger class="h-9 w-[132px] rounded-xl border-brand-outline-variant/30 bg-brand-surface-container-low text-xs text-brand-on-surface">
+            <SelectValue :placeholder="t('logs.range.1h')" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="15m">{{ t('logs.range.15m') }}</SelectItem>
+            <SelectItem value="1h">{{ t('logs.range.1h') }}</SelectItem>
+            <SelectItem value="6h">{{ t('logs.range.6h') }}</SelectItem>
+            <SelectItem value="24h">{{ t('logs.range.24h') }}</SelectItem>
+            <SelectItem value="custom">{{ t('logs.range.custom') }}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <button
         @click="exportConfirmOpen = true"
@@ -241,8 +277,8 @@ function categoryLabel(c: string | null): string {
     <!-- Detail modal -->
     <Teleport to="body">
       <div v-if="selectedLog" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 animate-fade-in" @click.self="selectedLog = null">
-        <div class="bg-white rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-          <div class="bg-brand-surface-container-low px-6 py-4 border-b border-brand-outline-variant/30 flex justify-between items-center select-none">
+        <div class="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[88vh]">
+          <div class="bg-slate-50 px-6 py-4 border-b border-brand-outline-variant/30 flex justify-between items-center select-none">
             <div class="flex items-center gap-2">
               <FileText :size="18" class="text-brand-primary" />
               <h4 class="font-sans text-sm font-bold text-brand-on-surface">{{ t('logs.detailTitle') }}</h4>
@@ -251,53 +287,54 @@ function categoryLabel(c: string | null): string {
               <X :size="16" />
             </button>
           </div>
-          <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-xs">
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div class="p-3 bg-brand-surface-container-low rounded-xl">
+          <div class="p-6 overflow-y-auto custom-scrollbar space-y-5 text-xs">
+            <div data-test="log-detail-metadata" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              <div class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4">
                 <p class="text-brand-secondary mb-0.5">{{ t('logs.featureModule') }}</p>
-                <p class="font-bold text-brand-on-surface">{{ selectedLog.feature || t('logs.defaultModule') }}</p>
+                <p class="font-bold text-brand-on-surface break-words">{{ displayModule(selectedLog) }}</p>
               </div>
-              <div v-if="selectedLog.statusCode !== null" class="p-3 bg-brand-surface-container-low rounded-xl">
+              <div class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4">
+                <p class="text-brand-secondary mb-0.5">{{ t('logs.operator') }}</p>
+                <p class="font-mono font-bold text-brand-on-surface break-all">{{ operatorOf(selectedLog) || '—' }}</p>
+              </div>
+              <div v-if="selectedLog.statusCode !== null" class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4">
                 <p class="text-brand-secondary mb-0.5">{{ t('logs.statusCode') }}</p>
                 <p :class="['font-mono font-bold', (selectedLog.statusCode ?? 0) >= 400 ? 'text-brand-error' : 'text-emerald-600']">{{ t('logs.httpStatus') }} {{ selectedLog.statusCode }}</p>
               </div>
-              <div class="p-3 bg-brand-surface-container-low rounded-xl">
-                <p class="text-brand-secondary mb-0.5">{{ t('logs.operator') }}</p>
-                <p class="font-mono font-bold text-brand-on-surface truncate">{{ selectedLog.operator ?? '—' }}</p>
+              <div v-if="selectedLog.endpoint || selectedLog.method" class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4 md:col-span-2 xl:col-span-2">
+                <p class="text-brand-secondary mb-0.5">HTTP</p>
+                <p class="font-mono font-bold text-brand-on-surface break-all">
+                  {{ selectedLog.method ?? '—' }} {{ selectedLog.endpoint ?? '—' }}
+                </p>
               </div>
-              <div v-if="selectedLog.fileInfo" class="p-3 bg-brand-surface-container-low rounded-xl col-span-2">
+              <div v-if="selectedLog.resultCategory || selectedLog.durationMs !== null" class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4">
+                <p class="text-brand-secondary mb-0.5">{{ t('logs.category') }}</p>
+                <p class="font-bold text-brand-on-surface">{{ categoryLabel(selectedLog.resultCategory) }}</p>
+                <p v-if="selectedLog.durationMs !== null" class="mt-1 font-mono text-[11px] text-brand-secondary">{{ selectedLog.durationMs }} ms</p>
+              </div>
+              <div v-if="selectedLog.fileInfo" class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4 md:col-span-2 xl:col-span-3">
                 <p class="text-brand-secondary mb-0.5">{{ t('logs.fileInfo') }}</p>
-                <p class="font-mono font-bold text-brand-on-surface">{{ selectedLog.fileInfo }}</p>
+                <p class="font-mono font-bold text-brand-on-surface break-all">{{ selectedLog.fileInfo }}</p>
               </div>
-              <div v-if="selectedLog.action" class="p-3 bg-brand-surface-container-low rounded-xl">
+              <div v-if="selectedLog.action" class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4">
                 <p class="text-brand-secondary mb-0.5">{{ t('logs.action') }}</p>
                 <p class="font-mono font-bold text-brand-on-surface">{{ selectedLog.action }}</p>
               </div>
-              <div v-if="selectedLog.target" class="p-3 bg-brand-surface-container-low rounded-xl">
+              <div v-if="selectedLog.target" class="rounded-2xl border border-brand-outline-variant/30 bg-slate-50 p-4">
                 <p class="text-brand-secondary mb-0.5">{{ t('logs.target') }}</p>
-                <p class="font-mono font-bold text-brand-on-surface truncate">{{ selectedLog.target }}</p>
-              </div>
-              <div v-if="selectedLog.resultCategory" class="p-3 bg-brand-surface-container-low rounded-xl">
-                <p class="text-brand-secondary mb-0.5">{{ t('logs.category') }}</p>
-                <p class="font-bold text-brand-on-surface">{{ categoryLabel(selectedLog.resultCategory) }}</p>
+                <p class="font-mono font-bold text-brand-on-surface break-all">{{ selectedLog.target }}</p>
               </div>
             </div>
-            <div class="space-y-1.5">
+            <div data-test="log-detail-summary" class="space-y-1.5">
               <p class="font-sans font-bold text-brand-on-surface">{{ t('logs.summaryLabel') }}</p>
               <div class="p-4 bg-brand-surface-container-low border border-brand-outline-variant/30 rounded-2xl font-sans font-medium text-brand-on-surface leading-relaxed">{{ selectedLog.message ?? '—' }}</div>
             </div>
-            <div class="space-y-1.5">
+            <div data-test="log-detail-trace" class="space-y-1.5">
               <p class="font-sans font-bold text-brand-on-surface">{{ t('logs.traceLabel') }}</p>
-              <pre class="p-4 bg-brand-on-surface text-slate-100 rounded-2xl font-mono text-[10px] overflow-x-auto leading-relaxed select-text custom-scrollbar"><code>[{{ formatDateTime(selectedLog.createdAt) }}] [{{ selectedLog.level }}] MODULE: {{ (selectedLog.feature || 'CORE').toUpperCase() }}
-STATUS: {{ (selectedLog.result ?? 'unknown').toUpperCase() }}
---------------------------------------------------------------------------------
-TRACEBACK:
-{{ selectedLog.stack || selectedLog.message || '—' }}
-
----- SYSTEM TELEMETRY EVENT LOGGED ----</code></pre>
+              <pre class="p-4 bg-brand-on-surface text-slate-100 rounded-2xl font-mono text-[10px] overflow-x-auto leading-relaxed select-text custom-scrollbar whitespace-pre-wrap break-words"><code>{{ traceText(selectedLog) }}</code></pre>
             </div>
           </div>
-          <div class="bg-brand-surface-container-low px-6 py-4 border-t border-brand-outline-variant/30 flex justify-end">
+          <div class="bg-slate-50 px-6 py-4 border-t border-brand-outline-variant/30 flex justify-end">
             <button @click="selectedLog = null" class="px-5 py-2 hover:bg-brand-surface-container-low border border-brand-outline-variant/40 text-[11px] font-bold text-brand-on-surface-variant rounded-xl cursor-pointer">{{ t('logs.endReview') }}</button>
           </div>
         </div>

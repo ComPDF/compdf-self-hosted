@@ -30,6 +30,12 @@ export interface LoginResult {
   mustChangePassword: boolean;
 }
 
+export interface RefreshedSession {
+  token: string;
+  username: string;
+  role: string;
+}
+
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -80,12 +86,12 @@ export class AuthService {
     await this.clearFailures(username);
     await this.db.execute('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
     await this.recordLogin(username, 'success', 'ok', ip, ua);
-    await this.recordUserAction(username, 'login', username, `login: user=${username}`);
 
-    const payload: AdminPayload = { sub: user.id, username: user.username, role: user.role, ver: user.token_version };
-    const token = await this.jwt.signAsync(payload, {
-      secret: this.jwtSecret,
-      expiresIn: this.jwtTtlSeconds,
+    const token = await this.signSession({
+      sub: user.id,
+      username: user.username,
+      role: user.role,
+      ver: user.token_version,
     });
 
     return {
@@ -93,6 +99,16 @@ export class AuthService {
       username: user.username,
       role: user.role,
       mustChangePassword: user.last_login_at === null,
+    };
+  }
+
+  /** Issue a replacement JWT after a mutable account attribute changes. */
+  async refreshSession(current: AdminPayload, username: string): Promise<RefreshedSession> {
+    const { sub, role, ver } = current;
+    return {
+      token: await this.signSession({ sub, username, role, ver }),
+      username,
+      role,
     };
   }
 
@@ -119,14 +135,12 @@ export class AuthService {
     }
     const hash = await bcrypt.hash(newPassword, 10);
     await this.db.execute('UPDATE users SET password_hash = ?, last_login_at = NOW(), token_version = token_version + 1 WHERE id = ?', [hash, userId]);
-    // PRD §5: admin password change → system log (structured action/target).
-    await this.db
-      .execute(
-        `INSERT INTO operation_logs (log_type, operator, level, result, result_category, action, target, message)
-         VALUES ('system', ?, 'INFO', 'success', 'success', 'password_changed', ?, ?)`,
-        [user.username.slice(0, 50), user.username, `password_changed: user=${user.username}`],
-      )
-      .catch((err: Error) => this.logger.warn(`system log write failed: ${err.message}`));
+    await this.recordUserAction(
+      user.username,
+      'password_changed',
+      user.username,
+      `Changed password for user "${user.username}".`,
+    );
   }
 
   /**
@@ -151,6 +165,13 @@ export class AuthService {
         message: 'too many failed attempts, try again later',
       });
     }
+  }
+
+  private signSession(payload: AdminPayload): Promise<string> {
+    return this.jwt.signAsync(payload, {
+      secret: this.jwtSecret,
+      expiresIn: this.jwtTtlSeconds,
+    });
   }
 
   private async recordFailure(username: string): Promise<void> {

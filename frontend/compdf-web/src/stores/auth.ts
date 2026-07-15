@@ -46,6 +46,14 @@ export const useAuthStore = defineStore('auth', {
         saveSession(this.session);
       }
     },
+    replaceSession(session: Pick<StoredSession, 'token' | 'username' | 'role'>) {
+      const current = this.session ?? loadSession();
+      this.session = {
+        ...session,
+        mustChangePassword: current?.mustChangePassword ?? false,
+      };
+      saveSession(this.session);
+    },
     logout() {
       this.session = null;
       clearSession();

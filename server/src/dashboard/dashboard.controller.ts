@@ -22,6 +22,7 @@ import type { Request, Response } from 'express';
 import { join } from 'path';
 import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import { JwtAuthGuard, AdminPayload } from '../auth/guards/jwt-auth.guard';
+import { AuthService, RefreshedSession } from '../auth/auth.service';
 import { contentDispositionAttachment } from '../common/utils/filename';
 import { BrandSettingsService } from './brand-settings.service';
 import { DashboardService } from './dashboard.service';
@@ -40,6 +41,7 @@ export class DashboardController {
     private readonly brands: BrandSettingsService,
     private readonly systemLog: SystemLogService,
     config: ConfigService,
+    private readonly auth: AuthService,
   ) {
     this.storageDir = config.get<string>('storageDir') ?? 'storage';
   }
@@ -62,7 +64,7 @@ export class DashboardController {
       req.user.username,
       'export_logs',
       `logs:${q.logType ?? 'all'}/${q.level ?? 'all'}/${q.timeRange ?? '1h'}`,
-      `export_logs: ${rows.length} rows`,
+      `Exported ${rows.length} log rows with filters: type=${q.logType ?? 'all'}, level=${q.level ?? 'all'}, range=${q.timeRange ?? '1h'}.`,
     );
     // BOM so Excel reads UTF-8 (logs contain CJK).
     res.set('Content-Type', 'text/csv; charset=utf-8');
@@ -107,12 +109,17 @@ export class DashboardController {
   }
 
   @Patch('account')
-  async updateAccount(@Body() dto: UpdateAccountDto, @Req() req: Request & { user: AdminPayload }) {
+  async updateAccount(@Body() dto: UpdateAccountDto, @Req() req: Request & { user: AdminPayload }): Promise<RefreshedSession> {
     if (dto.username && dto.username !== req.user.username) {
       await this.dashboard.updateUsername(req.user.sub, dto.username);
-      await this.dashboard.recordUserAction(req.user.username, 'update_username', dto.username, `→ ${dto.username}`);
+      await this.dashboard.recordUserAction(
+        req.user.username,
+        'update_username',
+        dto.username,
+        `Changed username from "${req.user.username}" to "${dto.username}".`,
+      );
     }
-    return { ok: true };
+    return this.auth.refreshSession(req.user, dto.username ?? req.user.username);
   }
 
   @Get('settings')
@@ -124,7 +131,12 @@ export class DashboardController {
   async updateSettings(@Body() dto: UpdateSettingsDto, @Req() req: Request & { user: AdminPayload }) {
     const updated = await this.brands.updateSettings(dto);
     const keys = Object.keys(dto).join(',') || '(noop)';
-    await this.dashboard.recordUserAction(req.user.username, 'update_settings', keys, JSON.stringify(dto));
+    await this.dashboard.recordUserAction(
+      req.user.username,
+      'update_settings',
+      keys,
+      settingsSummary(dto),
+    );
     return updated;
   }
 
@@ -158,9 +170,22 @@ export class DashboardController {
     }
     writeFileSync(join(brandingDir, filename), file.buffer);
     const updated = await this.brands.updateLogo(filename);
-    await this.dashboard.recordUserAction(req.user.username, 'upload_logo', filename, filename);
+    await this.dashboard.recordUserAction(
+      req.user.username,
+      'upload_logo',
+      filename,
+      `Uploaded branding logo "${filename}".`,
+    );
     return updated;
   }
+}
+
+function settingsSummary(dto: UpdateSettingsDto): string {
+  const entries = Object.entries(dto)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => `${key}=${JSON.stringify(value)}`);
+  if (entries.length === 0) return 'Updated settings with no field changes.';
+  return `Updated settings: ${entries.join(', ')}.`;
 }
 
 /** Minimal RFC-4180 CSV encoder: quote fields containing comma/quote/newline. */

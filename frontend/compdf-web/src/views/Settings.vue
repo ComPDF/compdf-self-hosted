@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  ShieldCheck, RefreshCw, Palette, Globe2, Check, FileCode, ArrowRight,
+  Palette, Globe2, Check, FileCode, ShieldCheck,
 } from 'lucide-vue-next';
 import { dashboardApi, type BrandSettings, type VersionInfo } from '@/api/dashboard';
 import { toApiError } from '@/api/client';
@@ -23,11 +23,10 @@ import {
 const { t } = useI18n();
 const brand = useBrandStore();
 const form = ref<BrandSettings | null>(null);
-const version = ref<VersionInfo | null>(null);
 const saveFinished = ref(false);
 const saveError = ref<string | null>(null);
-const checkingUpdate = ref(false);
 const logoFile = ref<File | null>(null);
+const version = ref<VersionInfo | null>(null);
 // Logo preview URL — tracks the configured logo; null (→ FileCode icon) when
 // no logo is configured or the image fails to load.
 const logoPreviewUrl = ref<string | null>(null);
@@ -46,14 +45,17 @@ const themeColors = [
 const settingsLocale = ref('en');
 
 onMounted(async () => {
-  const settings = await dashboardApi.getSettings();
+  const [settings, currentVersion] = await Promise.all([
+    dashboardApi.getSettings(),
+    dashboardApi.version(),
+  ]);
+  version.value = currentVersion;
   settingsLocale.value = dashboardLocaleToSettingsValue(settingsValueToDashboardLocale(settings.locale));
   form.value = {
     ...settings,
     locale: settingsLocale.value,
   };
   logoPreviewUrl.value = brand.c.logoUrl;
-  version.value = await dashboardApi.version();
 });
 
 async function saveConfig() {
@@ -100,15 +102,6 @@ async function onLogoChange(e: Event) {
   const url = updated.logoPath ? `/api/v1/dashboard/branding/logo?v=${Date.now()}` : null;
   logoPreviewUrl.value = url;
   if (brand.config) brand.config.logoUrl = url;
-}
-
-async function checkSoftwareUpdate() {
-  checkingUpdate.value = true;
-  try {
-    version.value = await dashboardApi.version();
-  } finally {
-    checkingUpdate.value = false;
-  }
 }
 
 </script>
@@ -194,47 +187,32 @@ async function checkSoftwareUpdate() {
         </div>
       </div>
 
-      <!-- Right: version + language -->
+      <!-- Right: language -->
       <div class="space-y-6">
-        <div class="bg-white border border-brand-outline-variant/60 rounded-2xl p-6 flex flex-col justify-between shadow-2xs hover:shadow-xs transition duration-200">
-          <div>
-            <div class="flex justify-between items-center mb-6 select-none">
-              <div class="flex items-center gap-2">
-                <ShieldCheck :size="18" class="text-brand-primary" />
-                <h3 class="font-sans text-base font-bold text-stone-800">{{ t('settings.versionTitle') }}</h3>
+        <div
+          data-test="settings-version-info"
+          class="bg-white border border-brand-outline-variant/60 rounded-2xl p-6 space-y-4 shadow-2xs hover:shadow-xs transition duration-200"
+        >
+          <div class="flex items-center justify-between gap-3 border-b border-stone-50 pb-3 select-none">
+            <div class="flex items-center gap-2">
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary">
+                <ShieldCheck :size="18" />
               </div>
-              <span v-if="version?.updateAvailable" class="bg-amber-50 text-amber-700 border border-amber-200 text-[11px] font-bold px-2 py-0.5 rounded">{{ t('settings.updateAvailable') }}</span>
-              <span v-else class="bg-[#ecfdf5] text-[#12b76a] border border-[#d1fae5] text-[11px] font-bold px-2 py-0.5 rounded">{{ t('settings.stable') }}</span>
-            </div>
-            <div class="space-y-4">
               <div>
-                <p class="text-xs text-stone-400 font-medium select-none mb-1">{{ t('settings.currentVersion') }}</p>
-                <p class="text-3xl font-bold text-brand-primary tracking-tight font-sans">v{{ version?.current ?? '—' }}</p>
-              </div>
-              <div v-if="version?.updateAvailable && version.latest" class="p-3.5 bg-amber-50/60 border border-amber-200/60 rounded-xl space-y-1.5">
-                <p class="text-xs font-bold text-amber-800">{{ t('settings.latestAvailable', { version: version.latest }) }}</p>
-                <p v-if="version.releasedAt" class="text-[10px] text-amber-700/80">{{ t('settings.releasedAt', { date: version.releasedAt.slice(0, 10) }) }}</p>
-                <p class="text-[10px] text-stone-500 mt-1">{{ t('settings.upgradeCommand') }} <code class="font-mono bg-white px-1.5 py-0.5 rounded border border-stone-200">docker compose pull && docker compose up -d</code></p>
-                <a v-if="version.changelogUrl" :href="version.changelogUrl" target="_blank" rel="noopener" class="text-[11px] font-bold text-brand-primary hover:underline inline-flex items-center gap-1 mt-1">
-                  {{ t('settings.viewChangelog') }} <ArrowRight :size="12" />
-                </a>
-              </div>
-              <div v-else-if="version && !version.updateAvailable" class="p-3.5 bg-emerald-50/40 border border-emerald-200/50 rounded-xl">
-                <p class="text-xs font-bold text-emerald-700">{{ t('settings.upToDate') }}</p>
-              </div>
-              <div v-else class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-                <p class="text-xs text-stone-500">{{ t('settings.updateCheckFailed') }}</p>
+                <h3 class="font-sans text-base font-bold text-stone-800">{{ t('settings.versionTitle') }}</h3>
+                <p class="text-[11px] text-stone-400">ComPDF Self-Hosted</p>
               </div>
             </div>
+            <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
+              {{ t('settings.stable') }}
+            </span>
           </div>
-          <button
-            @click="checkSoftwareUpdate"
-            :disabled="checkingUpdate"
-            class="w-full mt-6 bg-brand-primary hover:opacity-90 text-white py-3 rounded-lg text-xs font-bold font-sans transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
-          >
-            <RefreshCw :size="13" :class="checkingUpdate ? 'animate-spin' : ''" />
-            <span>{{ checkingUpdate ? t('settings.checking') : t('settings.checkUpdate') }}</span>
-          </button>
+          <div class="space-y-1">
+            <p class="text-xs font-medium text-stone-500">{{ t('settings.currentVersion') }}</p>
+            <p class="text-3xl font-bold tracking-normal text-brand-primary">
+              v{{ version?.current ?? '—' }}
+            </p>
+          </div>
         </div>
 
         <div class="bg-white border border-brand-outline-variant/60 rounded-2xl p-6 space-y-4 shadow-2xs hover:shadow-xs transition duration-200">

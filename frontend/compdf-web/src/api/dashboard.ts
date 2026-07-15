@@ -95,6 +95,12 @@ export interface VersionInfo {
   image: string | null;
 }
 
+export interface RefreshedSession {
+  token: string;
+  username: string;
+  role: string;
+}
+
 export type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
 export type LogType = 'user_action' | 'api_call' | 'error' | 'system';
 export type LogTimeRange = '15m' | '1h' | '6h' | '24h' | 'custom';
@@ -129,7 +135,7 @@ export const dashboardApi = {
     http.get<Paged<LoginRecord>>('/dashboard/login-records', { params: { page, pageSize } }).then((r) => r.data),
   apiKeys: () => http.get<ApiKeyInfo[]>('/dashboard/api-keys').then((r) => r.data),
   version: () => http.get<VersionInfo>('/dashboard/version').then((r) => r.data),
-  updateAccount: (username: string) => http.patch('/dashboard/account', { username }).then((r) => r.data),
+  updateAccount: (username: string) => http.patch<RefreshedSession>('/dashboard/account', { username }).then((r) => r.data),
   getSettings: () => http.get<BrandSettings>('/dashboard/settings').then((r) => r.data),
   updateSettings: (patch: UpdateSettings) => http.put<BrandSettings>('/dashboard/settings', patch).then((r) => r.data),
   uploadLogo: (file: File) => {
