@@ -16,7 +16,7 @@
  *   - `window.COMPDF_LICENSE` — display-only payload (sub/exp/scope/limits/...).
  *     Contains NO limit toggles and NOT the raw token.
  *   - `window.COMPDF_CONFIG`  — public brand config (siteName/logoUrl/themeColor/
- *     locale/darkMode/upgradeBannerText/docUrl/contactUrl/compdfToolsEnabled/apiKey).
+ *     darkMode/upgradeBannerText/docUrl/contactUrl/compdfToolsEnabled/apiKey).
  *     Logo is fetched unauthenticated from /api/v1/dashboard/branding/logo, so
  *     the pre-login SPA can render the brand. apiKey is the deployment key
  *     plaintext (env or init-db-generated), auto-attached as x-api-key by the

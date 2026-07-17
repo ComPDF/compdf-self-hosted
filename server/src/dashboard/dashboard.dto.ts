@@ -85,9 +85,6 @@ export class UpdateSettingsDto {
   @IsOptional() @IsString() @MaxLength(20)
   themeColor?: string;
 
-  @IsOptional() @IsIn(['en', 'zh-cn', 'zh-tw', 'ja', 'ko', 'th', 'es', 'zh-CN', 'zh-TW'])
-  locale?: string;
-
   @IsOptional() @IsBoolean()
   darkMode?: boolean;
 

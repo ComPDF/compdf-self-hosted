@@ -7,10 +7,6 @@ services:
     environment:
       RUSTFS_ACCESS_KEY: compdfkit-ak
       RUSTFS_SECRET_KEY: compdfkit-sk-2026
-    volumes:
-      - compdf_mysql_data:/var/lib/mysql
-      - compdf_redis_data:/data/redis
-      - compdf_rustfs_data:/data
     ports:
       - "13306:3306"
       - "16379:6379"
@@ -77,18 +73,23 @@ services:
     volumes:
       - ./server:/app
       - ./configs:/app/configs
-      - ./server-node-modules:/app/node_modules
+      - server-node-modules:/app/node_modules
       - ./server-storage:/app/storage
-    command: ["sh", "-c", "npm install && npm run init:db:dev && npm run start:dev"]
+    command:
+      - sh
+      - -c
+      - >-
+        lock_hash=$$(sha256sum package-lock.json | cut -d ' ' -f1);
+        marker=node_modules/.compdf-package-lock;
+        if [ ! -f "$$marker" ] || [ "$$(cat "$$marker")" != "$$lock_hash" ]; then
+          npm ci && printf '%s' "$$lock_hash" > "$$marker";
+        fi;
+        npm run init:db:dev && npm run start:dev
 
 volumes:
   compdf_output:
-  compdf_redis_data:
   compdf_pdf_data:
-  compdf_mysql_data:
-  compdf_rustfs_data:
   server-node-modules:
-  server-storage:
 
 networks:
   compdf-internal:

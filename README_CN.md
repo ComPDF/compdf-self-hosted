@@ -126,29 +126,31 @@ Dashboard:  http://localhost:8080/admin
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d --build compdf-infra compdf-app compdf-server
-docker compose -f docker-compose.dev.yml ps
 ```
 
-Server API URL:
+打开 ComPDF Web 和 Dashboard：
+
+```bash
+cd frontend/compdf-web
+npm install
+npm run dev
+```
+
+开发环境访问地址：
 
 ```text
-http://localhost:8080/api/v1/
+ComPDF Web: http://localhost:5173/
+Dashboard:  http://localhost:5173/admin
+Server API: http://localhost:8080/api/v1/
 ```
 
 也可查看[文档](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh)
 
-打开 ComPDF Web 和 Dashboard：
-
-```text
-ComPDF Web: http://localhost:8080/
-Dashboard:  http://localhost:8080/admin
-```
-
 ### 3. 查看状态和日志
 
 ```bash
-docker compose ps
-docker compose logs -f compdf-server
+docker compose -f docker-compose.dev.yml ps
+docker compose -f docker-compose.dev.yml logs -f compdf-infra compdf-app
 ```
 
 生产部署会把持久化数据存放在 Docker volumes 中，并将 `./configs` 挂载到 Server 容器。
@@ -231,11 +233,10 @@ docker compose -f docker-compose.yml up -d --build compdf-infra compdf-app compd
 
 ## 文档
 
-- 开发文档：[https://www.compdf.com/documentation](https://www.compdf.com/documentation?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh)
+- SDK 文档：[https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh)
 
 - API Reference：[https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh)
 
-- SDK 文档：[https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh)
 
 <a id="support"></a>
 
@@ -255,6 +256,6 @@ docker compose -f docker-compose.yml up -d --build compdf-infra compdf-app compd
 <p align="center">
   <b>ComPDF 团队打造</b><br>
   <a href="https://compdf.com?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh">官网</a> ·
-  <a href="https://www.compdf.com/guides/idp/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh">技术文档</a> ·
+  <a href="https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh">技术文档</a> ·
   <a href="https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_zh&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_zh&ref_platform_id=github_compdf_zh">企业咨询</a>
 </p>

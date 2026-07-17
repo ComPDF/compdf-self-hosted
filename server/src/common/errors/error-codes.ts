@@ -149,6 +149,10 @@ const PDF_BIZ_CODE_TO_ERROR_CODE: Readonly<Record<number, string>> = {
 
 export function semanticErrorCodeForBizCode(code: number, source: 'pdf' | 'conversion' | 'unknown' = 'unknown'): string | undefined {
   if (!Number.isFinite(code)) return undefined;
+  if (source !== 'unknown') {
+    const documented = processingErrorDefinition(source, code)?.errorCode;
+    if (documented) return documented;
+  }
   if (source === 'pdf') return PDF_BIZ_CODE_TO_ERROR_CODE[code] ?? BIZ_CODE_TO_ERROR_CODE[code];
   return BIZ_CODE_TO_ERROR_CODE[code] ?? PDF_BIZ_CODE_TO_ERROR_CODE[code];
 }
@@ -197,3 +201,4 @@ function numericCodeForHttpStatus(status: number): number {
     default: return 190999;
   }
 }
+import { processingErrorDefinition } from './processing-error-catalog';

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { LogOut, ChevronDown, Home } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores/auth';
+import LangSwitch from '@/components/LangSwitch.vue';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +44,10 @@ function confirmLogout() {
   auth.logout();
   router.push({ name: 'login' });
 }
+
+onMounted(() => {
+  if (auth.isAuthenticated) void auth.refreshAvatar();
+});
 </script>
 
 <template>
@@ -73,6 +78,8 @@ function confirmLogout() {
         <div class="h-6 w-[1px] bg-slate-100 hidden md:block" />
       </template>
 
+      <LangSwitch />
+
       <!-- Avatar dropdown -->
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
@@ -80,9 +87,10 @@ function confirmLogout() {
             class="flex items-center gap-2 px-3 py-1.5 rounded-xl hover:bg-slate-50 transition border border-transparent hover:border-slate-100 text-left"
           >
             <div
-              class="w-8 h-8 rounded-full bg-brand-primary-container text-brand-primary flex items-center justify-center font-bold text-xs border border-brand-outline-variant/30"
+              class="w-8 h-8 rounded-full bg-brand-primary-container text-brand-primary flex items-center justify-center overflow-hidden font-bold text-xs border border-brand-outline-variant/30"
             >
-              {{ auth.username.charAt(0).toUpperCase() || 'A' }}
+              <img v-if="auth.avatarUrl" :src="auth.avatarUrl" alt="" class="h-full w-full object-cover" />
+              <span v-else>{{ auth.username.charAt(0).toUpperCase() || 'A' }}</span>
             </div>
             <div class="hidden md:block select-none">
               <p class="text-xs font-bold text-stone-800 leading-none">{{ auth.username || 'Admin' }}</p>

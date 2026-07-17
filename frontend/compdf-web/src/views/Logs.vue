@@ -185,27 +185,27 @@ function traceText(log: LogEntry): string {
           >{{ tf.l }}</button>
         </div>
         <Select :model-value="levelFilter" @update:model-value="updateLevel">
-          <SelectTrigger class="h-9 w-[132px] rounded-xl border-brand-outline-variant/30 bg-brand-surface-container-low text-xs text-brand-on-surface">
-            <SelectValue :placeholder="t('logs.levelAll')" />
+          <SelectTrigger class="h-9 w-auto rounded-xl border-brand-outline-variant/30 bg-brand-surface-container-low text-xs font-semibold text-brand-on-surface">
+            <SelectValue class="text-xs" :placeholder="t('logs.levelAll')" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">{{ t('logs.levelAll') }}</SelectItem>
-            <SelectItem value="INFO">{{ t('logs.level.INFO') }}</SelectItem>
-            <SelectItem value="WARN">{{ t('logs.level.WARN') }}</SelectItem>
-            <SelectItem value="ERROR">{{ t('logs.level.ERROR') }}</SelectItem>
-            <SelectItem value="FATAL">{{ t('logs.level.FATAL') }}</SelectItem>
+            <SelectItem class="text-xs" value="ALL">{{ t('logs.levelAll') }}</SelectItem>
+            <SelectItem class="text-xs" value="INFO">{{ t('logs.level.INFO') }}</SelectItem>
+            <SelectItem class="text-xs" value="WARN">{{ t('logs.level.WARN') }}</SelectItem>
+            <SelectItem class="text-xs" value="ERROR">{{ t('logs.level.ERROR') }}</SelectItem>
+            <SelectItem class="text-xs" value="FATAL">{{ t('logs.level.FATAL') }}</SelectItem>
           </SelectContent>
         </Select>
         <Select :model-value="timeRange" @update:model-value="updateTimeRange">
-          <SelectTrigger class="h-9 w-[132px] rounded-xl border-brand-outline-variant/30 bg-brand-surface-container-low text-xs text-brand-on-surface">
-            <SelectValue :placeholder="t('logs.range.1h')" />
+          <SelectTrigger class="h-9 w-auto rounded-xl border-brand-outline-variant/30 bg-brand-surface-container-low text-xs font-semibold text-brand-on-surface">
+            <SelectValue class="text-xs" :placeholder="t('logs.range.1h')" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="15m">{{ t('logs.range.15m') }}</SelectItem>
-            <SelectItem value="1h">{{ t('logs.range.1h') }}</SelectItem>
-            <SelectItem value="6h">{{ t('logs.range.6h') }}</SelectItem>
-            <SelectItem value="24h">{{ t('logs.range.24h') }}</SelectItem>
-            <SelectItem value="custom">{{ t('logs.range.custom') }}</SelectItem>
+            <SelectItem class="text-xs" value="15m">{{ t('logs.range.15m') }}</SelectItem>
+            <SelectItem class="text-xs" value="1h">{{ t('logs.range.1h') }}</SelectItem>
+            <SelectItem class="text-xs" value="6h">{{ t('logs.range.6h') }}</SelectItem>
+            <SelectItem class="text-xs" value="24h">{{ t('logs.range.24h') }}</SelectItem>
+            <SelectItem class="text-xs" value="custom">{{ t('logs.range.custom') }}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -215,7 +215,7 @@ function traceText(log: LogEntry): string {
         class="text-xs text-brand-on-surface-variant border border-brand-outline-variant hover:bg-brand-surface-container-low bg-white px-4 py-2 rounded-xl transition duration-200 cursor-pointer font-bold shrink-0 flex items-center gap-1.5 disabled:opacity-50"
       >
         <Download :size="14" :class="exporting ? 'animate-bounce' : ''" />
-        <span>{{ exporting ? t('logs.exporting') : t('logs.exportCsv') }}</span>
+        <span class="text-xs">{{ exporting ? t('logs.exporting') : t('logs.exportCsv') }}</span>
       </button>
     </div>
 

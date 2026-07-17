@@ -255,7 +255,7 @@ export class ConversionClient {
         responseType: 'arraybuffer',
       });
       if (res.status !== 200) {
-        throw decodeUpstreamError(res.data, res.status);
+        throw decodeUpstreamError(res.data, res.status, 'conversion');
       }
       const buffer = Buffer.from(res.data);
       this.logger.debug(`conversion upstream success ${JSON.stringify({
@@ -305,9 +305,10 @@ export class ConversionClient {
     if (err instanceof UpstreamSdkError) return err;
     const e = err as { response?: AxiosResponse<ArrayBuffer>; message?: string };
     if (e.response) {
-      return decodeUpstreamError(e.response.data, e.response.status);
+      return decodeUpstreamError(e.response.data, e.response.status, 'conversion');
     }
     return new UpstreamSdkError({
+      source: 'conversion',
       status: 0,
       code: 0,
       message: e.message ?? 'conversion request failed',

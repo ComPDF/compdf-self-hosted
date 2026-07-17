@@ -1,5 +1,8 @@
 FROM node:24-bookworm-slim AS development
 WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends procps \
+    && rm -rf /var/lib/apt/lists/*
 COPY server/package*.json ./
 RUN npm ci
 EXPOSE 8080

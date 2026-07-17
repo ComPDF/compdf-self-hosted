@@ -77,7 +77,9 @@ export async function ensureDefaultAdmin(pool: PoolLike): Promise<EnsureDefaultA
  *   keyId is derived as the first 16 hex of the hash (stable across restarts).
  * - envSecret set and a different active key exists: update that single row
  *   instead of inserting another API key.
- * - envSecret unset: seed a random key only when there is no active API key.
+ * - envSecret unset: seed a random key when no active API key exists. If an
+ *   active key exists but its persisted plaintext is missing or stale, rotate
+ *   that same row so ComPDF Web can recover without creating a second key.
  */
 export async function ensureApiKey(
   pool: PoolLike,
@@ -105,12 +107,24 @@ export async function ensureApiKey(
     return { keyId, secret: null, fromEnv: true, inserted: true, updatedExisting: false };
   }
 
-  const [rows] = await pool.query<Array<{ id: number }>>(
-    'SELECT id FROM api_keys WHERE status = 1 LIMIT 1',
+  const [rows] = await pool.query<Array<{ id: number; key_hash: string }>>(
+    'SELECT id, key_hash FROM api_keys WHERE status = 1 LIMIT 1',
     [],
   );
-  const activeKeyExists = rows.length > 0;
-  if (activeKeyExists) return null;
+  const activeKey = rows[0];
+  if (activeKey) {
+    const persistedSecret = readPersistedPlaintext();
+    if (persistedSecret && hashApiKey(persistedSecret) === activeKey.key_hash) {
+      return null;
+    }
+    const { keyId, secret } = genApiKey();
+    await pool.execute(
+      'UPDATE api_keys SET key_id = ?, key_hash = ?, status = 1 WHERE id = ?',
+      [keyId, hashApiKey(secret), activeKey.id],
+    );
+    persistPlaintext(secret);
+    return { keyId, secret, fromEnv: false, inserted: false, updatedExisting: true };
+  }
   const { keyId, secret } = genApiKey();
   await pool.execute('INSERT INTO api_keys (key_id, key_hash) VALUES (?, ?)', [keyId, hashApiKey(secret)]);
   // Persist the plaintext to <storageDir>/.api-key-plaintext (0600) so the
@@ -124,6 +138,15 @@ export async function ensureApiKey(
 function plaintextPath(): string {
   const storageDir = process.env.STORAGE_DIR ?? join(process.cwd(), 'storage');
   return join(storageDir, PLAINTEXT_FILENAME);
+}
+
+function readPersistedPlaintext(): string | null {
+  try {
+    const secret = readFileSync(plaintextPath(), 'utf8').trim();
+    return secret || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -221,6 +244,11 @@ async function run(): Promise<void> {
       } else {
         console.log(`[init-db] api key from API_KEY env already present (key_id: ${result.keyId})`);
       }
+    } else if (result.updatedExisting) {
+      banner('API key recovered after missing or stale plaintext:', [
+        `key_id:    ${result.keyId}`,
+        `x-api-key: ${result.secret}`,
+      ]);
     } else {
       banner('First-boot API key (save now, shown once):', [
         `key_id:    ${result.keyId}`,

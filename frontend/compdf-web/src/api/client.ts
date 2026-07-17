@@ -15,13 +15,14 @@
  * File-download responses (Blob) don't match the envelope shape and pass through.
  *
  * The server's AllExceptionsFilter returns errors as
- * `{ code, errorCode, message, traceId }`; HTTP status remains separate.
+ * `{ type, code, errorCode, message, traceId }`; HTTP status remains separate.
  * File-returning endpoints are fetched with responseType:'blob'; a non-2xx blob
  * is re-read as JSON to extract the normalized error.
  */
 import axios, { AxiosError, type AxiosInstance, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 
 export interface ApiError {
+  type?: 'conversion' | 'pdf' | 'server';
   /** Six-digit business code returned by the server or processing SDK. */
   code?: number;
   errorCode?: string;
@@ -260,6 +261,9 @@ function normalizeApiErrorBody(body: Record<string, unknown>): ApiError {
     : 'Request failed. Please try again later.';
   const code = Number(body.code);
   return {
+    type: body.type === 'conversion' || body.type === 'pdf' || body.type === 'server'
+      ? body.type
+      : undefined,
     code: Number.isFinite(code) ? code : undefined,
     errorCode: typeof body.errorCode === 'string' ? body.errorCode : undefined,
     message,

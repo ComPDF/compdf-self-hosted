@@ -1,5 +1,7 @@
 # Dependencies & build artifacts
 node_modules/
+server-node-modules/
+server-storage/
 dist/
 
 # Test artifacts

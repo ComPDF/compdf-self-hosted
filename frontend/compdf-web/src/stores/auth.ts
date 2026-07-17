@@ -17,6 +17,7 @@ interface LoginResponse {
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     session: null as StoredSession | null,
+    avatarUrl: null as string | null,
   }),
   getters: {
     isAuthenticated: (s) => !!s.session?.token,
@@ -27,6 +28,18 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     restore() {
       this.session = loadSession();
+    },
+    async refreshAvatar() {
+      try {
+        const { data } = await http.get<Blob>('/dashboard/account/avatar', {
+          responseType: 'blob',
+        });
+        if (this.avatarUrl) URL.revokeObjectURL(this.avatarUrl);
+        this.avatarUrl = URL.createObjectURL(data);
+      } catch {
+        if (this.avatarUrl) URL.revokeObjectURL(this.avatarUrl);
+        this.avatarUrl = null;
+      }
     },
     async login(username: string, password: string): Promise<LoginResponse> {
       const { data } = await http.post<LoginResponse>('/auth/login', { username, password });
@@ -55,6 +68,8 @@ export const useAuthStore = defineStore('auth', {
       saveSession(this.session);
     },
     logout() {
+      if (this.avatarUrl) URL.revokeObjectURL(this.avatarUrl);
+      this.avatarUrl = null;
       this.session = null;
       clearSession();
     },

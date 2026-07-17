@@ -15,7 +15,7 @@
  * always use business code 200 in the body, even when the HTTP status is 202.
  *
  * Errors never reach this interceptor. AllExceptionsFilter returns the separate
- * error contract `{ code, errorCode, message, traceId }`.
+ * error contract `{ type, code, errorCode, message, traceId }`.
  */
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { map, Observable } from 'rxjs';

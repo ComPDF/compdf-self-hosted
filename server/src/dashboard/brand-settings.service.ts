@@ -22,7 +22,6 @@ export interface BrandSettings {
   siteName: string;
   logoPath: string | null;
   themeColor: string;
-  locale: string;
   darkMode: boolean;
   fileRetentionDays: number;
   upgradeBannerText: string | null;
@@ -37,7 +36,6 @@ export interface PublicBrandConfig {
   siteName: string;
   logoUrl: string | null;
   themeColor: string;
-  locale: string;
   darkMode: boolean;
   upgradeBannerText: string | null;
   docUrl: string | null;
@@ -54,7 +52,6 @@ interface SettingsRow {
   site_name: string;
   logo_path: string | null;
   theme_color: string;
-  locale: string;
   dark_mode: number;
   file_retention_days: number;
   upgrade_banner_text: string | null;
@@ -64,7 +61,7 @@ interface SettingsRow {
   updated_at: Date;
 }
 
-const SELECT_SQL = `SELECT site_name, logo_path, theme_color, locale, dark_mode, file_retention_days, upgrade_banner_text, doc_url, contact_url, announcements_json, updated_at FROM system_settings WHERE id = 1 LIMIT 1`;
+const SELECT_SQL = `SELECT site_name, logo_path, theme_color, dark_mode, file_retention_days, upgrade_banner_text, doc_url, contact_url, announcements_json, updated_at FROM system_settings WHERE id = 1 LIMIT 1`;
 
 const CACHE_TTL_MS = 5000;
 
@@ -111,7 +108,6 @@ export class BrandSettingsService {
       // Cache-buster via updatedAt so a re-uploaded logo isn't served stale.
       logoUrl: logoExists ? `/api/v1/dashboard/branding/logo?v=${s.updatedAt.getTime()}` : null,
       themeColor: s.themeColor,
-      locale: s.locale,
       darkMode: s.darkMode,
       upgradeBannerText: s.upgradeBannerText,
       docUrl: s.docUrl,
@@ -128,7 +124,6 @@ export class BrandSettingsService {
     const params: Array<string | number | null> = [];
     if (patch.siteName !== undefined) { sets.push('site_name = ?'); params.push(patch.siteName); }
     if (patch.themeColor !== undefined) { sets.push('theme_color = ?'); params.push(patch.themeColor); }
-    if (patch.locale !== undefined) { sets.push('locale = ?'); params.push(patch.locale); }
     if (patch.darkMode !== undefined) { sets.push('dark_mode = ?'); params.push(patch.darkMode ? 1 : 0); }
     // Empty string → NULL (clears the field).
     if (patch.upgradeBannerText !== undefined) { sets.push('upgrade_banner_text = ?'); params.push(patch.upgradeBannerText || null); }
@@ -167,7 +162,7 @@ export class BrandSettingsService {
       existing = {};
     }
     const branding = { ...(existing.branding as object | undefined), site_name: s.siteName, theme_color: s.themeColor };
-    const ui = { ...(existing.ui as object | undefined), locale: s.locale, dark_mode: s.darkMode };
+    const ui = { ...(existing.ui as object | undefined), dark_mode: s.darkMode };
     const retention = { ...(existing.retention as object | undefined), file_retention_days: s.fileRetentionDays };
     const marketing = {
       ...(existing.marketing as object | undefined),
@@ -194,7 +189,6 @@ function mapRow(r: SettingsRow): BrandSettings {
     siteName: r.site_name,
     logoPath: r.logo_path,
     themeColor: r.theme_color,
-    locale: r.locale,
     darkMode: !!r.dark_mode,
     fileRetentionDays: r.file_retention_days,
     upgradeBannerText: r.upgrade_banner_text,
@@ -209,7 +203,6 @@ const DEFAULT_SETTINGS: BrandSettings = {
   siteName: 'ComPDF Self-Hosted',
   logoPath: null,
   themeColor: '#1976D2',
-  locale: 'en',
   darkMode: false,
   fileRetentionDays: 7,
   upgradeBannerText: null,

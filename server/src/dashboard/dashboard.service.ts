@@ -244,6 +244,18 @@ export class DashboardService {
     }
   }
 
+  async getAvatarPath(userId: number): Promise<string | null> {
+    const rows = await this.mysql.query<Array<{ avatar_path: string | null }>>(
+      'SELECT avatar_path FROM users WHERE id = ? LIMIT 1',
+      [userId],
+    );
+    return rows[0]?.avatar_path ?? null;
+  }
+
+  async updateAvatarPath(userId: number, avatarPath: string): Promise<void> {
+    await this.mysql.execute('UPDATE users SET avatar_path = ? WHERE id = ?', [avatarPath, userId]);
+  }
+
   /** Best-effort user_action audit row. Never throws. */
   async recordUserAction(
     operator: string,

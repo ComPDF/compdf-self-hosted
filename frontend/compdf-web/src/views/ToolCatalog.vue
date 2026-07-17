@@ -74,9 +74,9 @@ const isDemoBannerVisible = ref(true);
   line-height: 32px;
 }
 .grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(224px, 1fr));
 }
 .demo-banner {
   position: relative;

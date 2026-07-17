@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import {
-  Eye, EyeOff, KeyRound, CheckCircle2, AlertCircle, AlertTriangle, Info, Camera,
+  Eye, EyeOff, KeyRound, CheckCircle2, AlertCircle, AlertTriangle, Info, Upload,
 } from 'lucide-vue-next';
 import { useAuthStore } from '@/stores/auth';
 import { dashboardApi, type LoginRecord } from '@/api/dashboard';
@@ -34,7 +34,36 @@ const newError = ref('');
 const confirmError = ref('');
 
 const loginRecords = ref<LoginRecord[]>([]);
+const avatarInput = ref<HTMLInputElement | null>(null);
+const avatarUploading = ref(false);
+
+function chooseAvatar() {
+  avatarInput.value?.click();
+}
+
+async function uploadAvatar(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = '';
+  if (!file) return;
+  if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 2 * 1024 * 1024) {
+    displayToast(t('account.avatarInvalid'), 'warning');
+    return;
+  }
+  avatarUploading.value = true;
+  try {
+    await dashboardApi.uploadAccountAvatar(file);
+    await auth.refreshAvatar();
+    displayToast(t('account.avatarUpdated'));
+  } catch {
+    displayToast(t('account.avatarUploadFailed'), 'error');
+  } finally {
+    avatarUploading.value = false;
+  }
+}
+
 onMounted(async () => {
+  await auth.refreshAvatar();
   try {
     const res = await dashboardApi.loginRecords(1, 10);
     loginRecords.value = res.items;
@@ -137,14 +166,19 @@ const toastStyles: Record<ToastType, { box: string; icon: string; iconComp: type
         <div class="bg-white border border-brand-outline-variant/30 rounded-3xl p-6 shadow-sm flex flex-col items-center">
           <div class="relative w-28 h-28 mx-auto mt-4">
             <div class="w-full h-full rounded-2xl bg-gradient-to-br from-slate-800 to-slate-950 flex items-center justify-center border border-slate-700/60 shadow-inner overflow-hidden select-none">
-              <span class="text-3xl font-bold text-white">{{ (auth.username || 'A').charAt(0).toUpperCase() }}</span>
+              <img v-if="auth.avatarUrl" :src="auth.avatarUrl" :alt="t('account.avatarAlt')" class="h-full w-full object-cover" />
+              <span v-else class="text-3xl font-bold text-white">{{ (auth.username || 'A').charAt(0).toUpperCase() }}</span>
             </div>
             <button
-              @click="displayToast(t('account.cameraUnsupported'), 'warning')"
+              type="button"
+              :disabled="avatarUploading"
+              :aria-label="t('account.selectAvatar')"
+              @click="chooseAvatar"
               class="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[#2563eb] hover:bg-[#1d4ed8] text-white flex items-center justify-center border-2 border-white shadow-md hover:scale-110 transition cursor-pointer"
             >
-              <Camera :size="14" />
+              <Upload :size="14" />
             </button>
+            <input ref="avatarInput" class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" @change="uploadAvatar" />
           </div>
           <h3 class="font-sans text-lg font-bold text-stone-900 mt-5 tracking-tight select-none">{{ auth.username || 'Admin' }}</h3>
           <span class="text-[11px] font-medium text-stone-500 bg-slate-100 rounded-lg px-3 py-1 mt-1.5 font-sans select-none">{{ t('account.roleEnterpriseAdmin') }}</span>

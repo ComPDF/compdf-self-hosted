@@ -25,7 +25,6 @@ const icon = computed(() => {
   display: flex;
   align-items: center;
   gap: 20px;
-  width: 240px;
   min-height: 88px;
   padding: 24px 16px;
   overflow: hidden;

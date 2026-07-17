@@ -248,10 +248,11 @@ export class PdfSdkClient {
   private toUpstreamError(err: unknown): UpstreamSdkError {
     const e = err as { response?: AxiosResponse<ArrayBuffer>; message?: string };
     if (e.response) {
-      return decodeUpstreamError(e.response.data, e.response.status);
+      return decodeUpstreamError(e.response.data, e.response.status, 'pdf');
     }
     // Network / timeout — no upstream body. Surface a neutral upstream error.
     return new UpstreamSdkError({
+      source: 'pdf',
       status: 0,
       code: 0,
       message: e.message ?? 'PDF SDK request failed',

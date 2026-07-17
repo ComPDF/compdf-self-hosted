@@ -13,7 +13,7 @@
  * TaskService is a plain provider; the DI container resolves its constructor deps by
  * type. The controller returns raw data on success (the global
  * EnvelopeInterceptor wraps it as `{ code, msg, data }`); errors throw to
- * AllExceptionsFilter which shapes `{ code, errorCode, message, traceId }`. The service
+ * AllExceptionsFilter which shapes `{ type, code, errorCode, message, traceId }`. The service
  * owns the background run + on-disk result file.
  */
 import { Module } from '@nestjs/common';

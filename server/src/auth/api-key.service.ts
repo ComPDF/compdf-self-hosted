@@ -9,9 +9,9 @@
  *   2. `<storageDir>/.api-key-plaintext` — written once by init-db.ts when it
  *      generates a random key on first boot. Mode 0600. The file persists
  *      across restarts so the server can re-inject on boot.
- *   3. null — no plaintext available; the SPA shows "API Key 为空或错误" on
- *      the first tool call (401 from ApiKeyGuard). init-db does not create a
- *      second key when an active API key already exists.
+ *   3. null — no plaintext available before initialization completes. On the
+ *      next init-db run, a missing or stale plaintext rotates the existing
+ *      active row and persists a replacement without creating a second key.
  *
  * The plaintext is ONLY the deployment's own client key (single-tenant,
  * self-hosted). It is never the license token, never an admin credential. The

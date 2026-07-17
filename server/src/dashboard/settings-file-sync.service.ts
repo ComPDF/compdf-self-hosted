@@ -25,7 +25,7 @@ import { MysqlClient } from '../clients/mysql.client';
 
 interface ParsedSettings {
   branding?: { site_name?: string; theme_color?: string; logo_file?: string };
-  ui?: { locale?: string; dark_mode?: boolean };
+  ui?: { dark_mode?: boolean };
   retention?: { file_retention_days?: number };
   marketing?: {
     upgrade_banner_text?: string | null;
@@ -41,7 +41,6 @@ function extractColumns(p: ParsedSettings | null): Record<string, string | numbe
   if (!p) return out;
   if (p.branding?.site_name !== undefined) out.site_name = p.branding.site_name;
   if (p.branding?.theme_color !== undefined) out.theme_color = p.branding.theme_color;
-  if (p.ui?.locale !== undefined) out.locale = p.ui.locale;
   if (p.ui?.dark_mode !== undefined) out.dark_mode = p.ui.dark_mode ? 1 : 0;
   if (p.retention?.file_retention_days !== undefined) {
     out.file_retention_days = p.retention.file_retention_days;

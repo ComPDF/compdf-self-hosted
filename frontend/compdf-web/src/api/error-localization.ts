@@ -16,16 +16,16 @@ const ERROR_CODE_KEYS: Readonly<Record<string, string>> = {
   INVALID_PAGE_RANGE: 'invalidPageRange',
   INVALID_PAGE_INDEX: 'invalidPageIndex',
   INVALID_RECT: 'invalidRect',
-  INVALID_QUAD_RECTS: 'invalidRect',
+  INVALID_QUAD_RECTS: 'invalidQuadRects',
   PAGE_RANGE_EMPTY: 'pageRangeEmpty',
   PASSWORD_REQUIRED: 'passwordRequired',
   INVALID_PASSWORD: 'invalidPassword',
   CERTIFICATE_INVALID: 'certificateInvalid',
   CERTIFICATE_PASSWORD_REQUIRED: 'certificatePasswordRequired',
   CERTIFICATE_PASSWORD_INVALID: 'certificatePasswordInvalid',
-  TRUSTED_CERTIFICATE_INVALID: 'certificateInvalid',
+  TRUSTED_CERTIFICATE_INVALID: 'trustedCertificateInvalid',
   ICC_PROFILE_REQUIRED: 'iccProfileRequired',
-  ICC_PROFILE_INVALID: 'iccProfileRequired',
+  ICC_PROFILE_INVALID: 'iccProfileInvalid',
   UNSUPPORTED_OPERATION: 'unsupportedOperation',
   UNSUPPORTED_ENUM_VALUE: 'unsupportedEnumValue',
   SIGNATURE_NOT_FOUND: 'signatureNotFound',
@@ -71,7 +71,45 @@ const ERROR_CODE_KEYS: Readonly<Record<string, string>> = {
   LICENSE_EXPIRED: 'licenseExpired',
   LICENSE_INVALID: 'licenseInvalid',
   LICENSE_MISSING: 'licenseMissing',
+  CANCEL: 'cancelled',
+  FILE_ERROR: 'fileError',
+  PDF_PAGE_ERROR: 'pdfPageError',
+  IO_ERROR: 'ioError',
+  COMPRESS_ERROR: 'compressError',
+  LICENSE_EXPIRE: 'licenseExpired',
+  LICENSE_UNSUPPORTED_PLATFORM: 'licenseUnsupportedPlatform',
+  LICENSE_UNSUPPORTED_ID: 'licenseUnsupportedId',
+  LICENSE_UNSUPPORTED_DEVICE: 'licenseUnsupportedDevice',
+  LICENSE_PERMISSION_DENY: 'licensePermissionDenied',
+  LICENSE_UNINITIALIZED: 'licenseUninitialized',
+  LICENSE_ILLEGAL_ACCESS: 'licenseIllegalAccess',
+  LICENSE_FILE_READ_FAILED: 'licenseFileReadFailed',
+  LICENSE_OCR_PERMISSION_DENY: 'licenseOcrPermissionDenied',
+  LICENSE_CONCURRENCY_EXCEEDED: 'concurrencyExceeded',
+  LICENSE_PAGE_LIMIT_EXCEEDED: 'pageLimitExceeded',
+  LICENSE_QUOTA_CORRUPTED: 'licenseQuotaCorrupted',
+  NO_TABLE_ERROR: 'noTable',
+  CONVERTING_ERROR: 'convertingError',
+  INVALID_ARG: 'invalidArgument',
+  INVALID_HANDLE: 'invalidHandle',
+  INVALID_MODEL_FORMAT: 'invalidModelFormat',
+  MODEL_FUNCTION_UNSUPPORTED: 'modelFunctionUnsupported',
+  MODEL_FORMAT_UNSUPPORTED: 'modelFormatUnsupported',
+  MODEL_SDK_MISMATCH: 'modelSdkMismatch',
+  IMAGE_DATA_EMPTY: 'imageDataEmpty',
+  IMAGE_WIDTH_HEIGHT_ERROR: 'imageDimensionsInvalid',
+  IMAGE_FORMAT_UNSUPPORTED: 'imageFormatUnsupported',
+  EXPIRE_ERROR: 'resourceExpired',
+  MISSING_ARG: 'missingArgument',
+  LICENSE_UNSUPPORTED_API: 'licenseUnsupportedApi',
+  LICENSE_MISMATCH: 'licenseMismatch',
+  INVALID_TABLE: 'invalidTable',
+  UNKNOWN_ERROR: 'unknownError',
 };
+
+export const PROCESSING_ERROR_TRANSLATION_KEYS = Object.freeze(
+  [...new Set(Object.values(ERROR_CODE_KEYS))].sort(),
+);
 
 const SHARED_NUMERIC_KEYS: Readonly<Record<number, string>> = {
   100001: 'invalidRequest',
@@ -142,17 +180,15 @@ const CONVERSION_NUMERIC_KEYS: Readonly<Record<number, string>> = {
 };
 
 export function apiErrorTranslationKey(
-  error: Pick<ApiError, 'code' | 'errorCode' | 'message'>,
+  error: Pick<ApiError, 'type' | 'code' | 'errorCode' | 'message'>,
   source: ProcessingErrorSource = 'unknown',
 ): string | null {
   if (error.errorCode && ERROR_CODE_KEYS[error.errorCode]) {
     return ERROR_CODE_KEYS[error.errorCode];
   }
   if (typeof error.code !== 'number') return null;
-  if (source === 'pdf') return PDF_NUMERIC_KEYS[error.code] ?? null;
-  if (source === 'conversion') return CONVERSION_NUMERIC_KEYS[error.code] ?? null;
-  return SHARED_NUMERIC_KEYS[error.code]
-    ?? PDF_NUMERIC_KEYS[error.code]
-    ?? CONVERSION_NUMERIC_KEYS[error.code]
-    ?? null;
+  const resolvedSource = error.type ?? source;
+  if (resolvedSource === 'pdf') return PDF_NUMERIC_KEYS[error.code] ?? null;
+  if (resolvedSource === 'conversion') return CONVERSION_NUMERIC_KEYS[error.code] ?? null;
+  return SHARED_NUMERIC_KEYS[error.code] ?? null;
 }

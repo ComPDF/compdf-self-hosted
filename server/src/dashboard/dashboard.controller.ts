@@ -20,7 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { join } from 'path';
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
 import { JwtAuthGuard, AdminPayload } from '../auth/guards/jwt-auth.guard';
 import { AuthService, RefreshedSession } from '../auth/auth.service';
 import { contentDispositionAttachment } from '../common/utils/filename';
@@ -122,6 +122,62 @@ export class DashboardController {
     return this.auth.refreshSession(req.user, dto.username ?? req.user.username);
   }
 
+  @Get('account/avatar')
+  async accountAvatar(
+    @Req() req: Request & { user: AdminPayload },
+    @Res() res: Response,
+  ): Promise<void> {
+    const avatarPath = await this.dashboard.getAvatarPath(req.user.sub);
+    if (!avatarPath) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'profile avatar not found' });
+    }
+    const avatarFile = join(this.storageDir, 'avatars', avatarPath);
+    if (!existsSync(avatarFile)) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'profile avatar file missing' });
+    }
+    res.set('Content-Type', avatarContentType(avatarPath));
+    res.set('Cache-Control', 'no-store');
+    res.status(200).send(readFileSync(avatarFile));
+  }
+
+  @Post('account/avatar')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      limits: { fileSize: 2 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.mimetype)) {
+          return cb(new BadRequestException({ code: 'VALIDATION_ERROR', message: 'avatar must be PNG, JPEG, or WebP' }), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadAvatar(
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @Req() req: Request & { user: AdminPayload },
+  ): Promise<{ ok: true }> {
+    if (!file?.buffer || file.buffer.length === 0) {
+      throw new BadRequestException({ code: 'VALIDATION_ERROR', message: 'avatar file is required' });
+    }
+    const ext = avatarExtension(file.mimetype);
+    const filename = `${req.user.sub}.${ext}`;
+    const avatarDir = join(this.storageDir, 'avatars');
+    mkdirSync(avatarDir, { recursive: true });
+    const previous = await this.dashboard.getAvatarPath(req.user.sub);
+    if (previous && previous !== filename) {
+      try { unlinkSync(join(avatarDir, previous)); } catch { /* best-effort */ }
+    }
+    writeFileSync(join(avatarDir, filename), file.buffer);
+    await this.dashboard.updateAvatarPath(req.user.sub, filename);
+    await this.dashboard.recordUserAction(
+      req.user.username,
+      'update_avatar',
+      filename,
+      'Updated profile avatar.',
+    );
+    return { ok: true };
+  }
+
   @Get('settings')
   getSettings() {
     return this.brands.getSettings();
@@ -186,6 +242,18 @@ function settingsSummary(dto: UpdateSettingsDto): string {
     .map(([key, value]) => `${key}=${JSON.stringify(value)}`);
   if (entries.length === 0) return 'Updated settings with no field changes.';
   return `Updated settings: ${entries.join(', ')}.`;
+}
+
+function avatarExtension(mimetype: string): 'png' | 'jpg' | 'webp' {
+  if (mimetype === 'image/jpeg') return 'jpg';
+  if (mimetype === 'image/webp') return 'webp';
+  return 'png';
+}
+
+function avatarContentType(path: string): string {
+  if (path.endsWith('.jpg')) return 'image/jpeg';
+  if (path.endsWith('.webp')) return 'image/webp';
+  return 'image/png';
 }
 
 /** Minimal RFC-4180 CSV encoder: quote fields containing comma/quote/newline. */

@@ -6,11 +6,11 @@ import ja from './locales/ja.json';
 import ko from './locales/ko.json';
 import th from './locales/th.json';
 import es from './locales/es.json';
-import { LANGUAGES, DASHBOARD_LANGUAGES, getStoredLocale, DEFAULT_LOCALE } from '../config/i18n-keys';
+import { LANGUAGES, getStoredLocale, DEFAULT_LOCALE } from '../config/i18n-keys';
 
 export type Locale = string;
 
-export { LANGUAGES, DASHBOARD_LANGUAGES };
+export { LANGUAGES };
 
 export const i18n = createI18n({
   legacy: false,

@@ -43,7 +43,6 @@ function devConfigPlugin(): Plugin {
     siteName: 'ComPDF Self-Hosted (dev)',
     logoUrl: null as string | null,
     themeColor: '#1668ff',
-    locale: 'en',
     darkMode: false,
     upgradeBannerText: null as string | null,
     docUrl: null as string | null,

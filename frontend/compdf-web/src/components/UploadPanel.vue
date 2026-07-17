@@ -603,6 +603,17 @@ function fallbackFilename(): string {
         {{ t('pdfToolDetail.upload.pdfTo', { type: typeMapping[argument].title }) }}
       </div>
 
+      <div class="await-actions">
+        <button
+          type="button"
+          class="select-more"
+          :disabled="isTaskRunning"
+          @click="handleClick(canSelectMultiple ? 'add' : 'replace')"
+        >
+          {{ t('pdfToolDetail.upload.selectFile') }}
+        </button>
+      </div>
+
       <div class="name">
         <div class="name-list">
           <div
@@ -615,17 +626,6 @@ function fallbackFilename(): string {
         </div>
         <button type="button" class="name-delete" :disabled="isTaskRunning" @click.stop="handleDelete">
           <DeleteIcon />
-        </button>
-      </div>
-
-      <div class="await-actions">
-        <button
-          type="button"
-          class="select-more"
-          :disabled="isTaskRunning"
-          @click="handleClick(canSelectMultiple ? 'add' : 'replace')"
-        >
-          {{ t('pdfToolDetail.upload.selectFile') }}
         </button>
       </div>
 
@@ -785,7 +785,7 @@ function fallbackFilename(): string {
   box-shadow: 0 0 0 2px #396ffa inset;
 }
 .converter-wrapper.params {
-  padding: 32px 32px 40px;
+  padding: 40px 32px 40px;
   min-height: 380px;
 }
 .converter-wrapper.no-pad {
@@ -815,7 +815,7 @@ function fallbackFilename(): string {
   align-items: center;
   width: 100%;
   min-height: 56px;
-  margin: 36px 0 48px;
+  margin: 20px 0 40px;
   padding: 8px 12px;
   background: #fff;
   border-radius: 4px;
@@ -875,10 +875,7 @@ function fallbackFilename(): string {
   margin-bottom: 0;
 }
 .converter-wrapper.params .await-actions {
-  position: absolute;
-  top: 8px;
-  right: 32px;
-  z-index: 3;
+  margin-right: 0px;
 }
 .converter-wrapper.params .split-await-actions {
   position: static;

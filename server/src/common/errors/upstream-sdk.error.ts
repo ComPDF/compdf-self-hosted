@@ -12,6 +12,8 @@
  * Do NOT branch on the numeric `code` range (ranges overlap by design).
  */
 export class UpstreamSdkError extends Error {
+  /** Client that produced the error; numeric code spaces overlap. */
+  public readonly source: 'conversion' | 'pdf';
   /** Upstream HTTP status (e.g. 400/402/422/429). */
   public readonly status: number;
   /** Upstream 6-digit numeric code. */
@@ -22,6 +24,7 @@ export class UpstreamSdkError extends Error {
   public readonly errorCode?: string;
 
   constructor(opts: {
+    source: 'conversion' | 'pdf';
     status: number;
     code: number;
     message: string;
@@ -30,6 +33,7 @@ export class UpstreamSdkError extends Error {
   }) {
     super(opts.message);
     this.name = 'UpstreamSdkError';
+    this.source = opts.source;
     this.status = opts.status;
     this.code = opts.code;
     this.traceId = opts.traceId;
@@ -38,7 +42,7 @@ export class UpstreamSdkError extends Error {
 
   /** True when the error came from the conversion engine (errorCode present). */
   get isConversion(): boolean {
-    return typeof this.errorCode === 'string';
+    return this.source === 'conversion';
   }
 }
 
@@ -52,6 +56,7 @@ export class UpstreamSdkError extends Error {
 export function decodeUpstreamError(
   body: Buffer | ArrayBuffer | string | Record<string, unknown> | undefined,
   status: number,
+  source: 'conversion' | 'pdf',
 ): UpstreamSdkError {
   let parsed: Record<string, unknown> | undefined;
   let buf: Buffer | undefined;
@@ -90,6 +95,7 @@ export function decodeUpstreamError(
     typeof parsed?.errorCode === 'string' ? parsed.errorCode : undefined;
 
   return new UpstreamSdkError({
+    source,
     status,
     code: Number.isFinite(code) ? code : 0,
     message,

@@ -27,6 +27,7 @@ CREATE TABLE IF NOT EXISTS users (
   role         VARCHAR(20)  NOT NULL DEFAULT 'admin',
   status       TINYINT      NOT NULL DEFAULT 1, -- 1 active, 0 disabled
   token_version INT         NOT NULL DEFAULT 0, -- increment to invalidate issued JWT sessions
+  avatar_path  VARCHAR(255) NULL,
   created_at   DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_login_at DATETIME    NULL
 );
@@ -132,7 +133,6 @@ CREATE TABLE IF NOT EXISTS system_settings (
   site_name    VARCHAR(100) NOT NULL DEFAULT 'ComPDF Self-Hosted',
   logo_path    VARCHAR(255) NULL,
   theme_color  VARCHAR(20)  NOT NULL DEFAULT '#1976D2',
-  locale       VARCHAR(10)  NOT NULL DEFAULT 'en',
   dark_mode    TINYINT      NOT NULL DEFAULT 0,
   file_retention_days INT   NOT NULL DEFAULT 7,
   -- v4.1.0 brand/marketing fields (nullable: NULL = "use frontend default"):
@@ -148,6 +148,9 @@ CREATE TABLE IF NOT EXISTS system_settings (
 -- issued JWT sessions become invalid immediately.
 SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='token_version');
 SET @s := IF(@c=0,'ALTER TABLE users ADD COLUMN token_version INT NOT NULL DEFAULT 0 AFTER status','DO 1'); PREPARE _p FROM @s; EXECUTE _p; DEALLOCATE PREPARE _p;
+
+SET @c := (SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='avatar_path');
+SET @s := IF(@c=0,'ALTER TABLE users ADD COLUMN avatar_path VARCHAR(255) NULL AFTER token_version','DO 1'); PREPARE _p FROM @s; EXECUTE _p; DEALLOCATE PREPARE _p;
 
 -- Idempotent column adds for DBs already initialized with the v4.0 system_settings
 -- schema (CREATE TABLE IF NOT EXISTS is a no-op when the table exists, so new

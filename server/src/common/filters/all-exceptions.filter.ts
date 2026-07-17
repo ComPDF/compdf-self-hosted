@@ -2,7 +2,7 @@
  * AllExceptionsFilter — single normalization point for ALL errors leaving the
  * server. SDK business errors use HTTP 200; server errors keep their 4xx/5xx
  * status. The JSON body always uses:
- * `{ code, errorCode, message, traceId }`.
+ * `{ type, code, errorCode, message, traceId }`.
  *
  * `code` is the six-digit business code. SDK errors preserve the upstream
  * numeric code; server errors map their semantic errorCode to the same ranges.
@@ -20,11 +20,13 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpException, Logger } from '@n
 import { ValidationError } from 'class-validator';
 import { randomUUID } from 'crypto';
 import { ErrorCode, numericCodeForServerError, semanticErrorCodeForBizCode } from '../errors/error-codes';
+import { processingErrorDefinition } from '../errors/processing-error-catalog';
 import { UpstreamSdkError } from '../errors/upstream-sdk.error';
 
 export interface NormalizedError {
   statusCode: number;
   body: {
+    type: 'conversion' | 'pdf' | 'server';
     code: number;
     errorCode: string;
     message: string;
@@ -59,6 +61,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     return {
       statusCode: 500,
       body: {
+        type: 'server',
         code: 190999,
         errorCode: ErrorCode.INTERNAL_ERROR,
         message: 'Internal server error.',
@@ -73,14 +76,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const statusCode = 200;
     const code = err.code > 0 ? err.code : 190999;
     const errorCode = err.errorCode
-      ?? semanticErrorCodeForBizCode(err.code, err.isConversion ? 'conversion' : 'pdf')
+      ?? (err.code > 0
+        ? semanticErrorCodeForBizCode(err.code, err.isConversion ? 'conversion' : 'pdf')
+        : undefined)
       ?? ErrorCode.UPSTREAM_ERROR;
     return {
       statusCode,
       body: {
+        type: err.source,
         code,
         errorCode,
-        message: englishUpstreamMessage(err.message, errorCode),
+        message: englishUpstreamMessage(err.message, errorCode, err.source, code),
         traceId: err.traceId ?? createTraceId(),
       },
     };
@@ -141,6 +147,7 @@ function validationMessage(messages: unknown[]): string {
 
 function serverErrorBody(status: number, errorCode: string, message: string): NormalizedError['body'] {
   return {
+    type: 'server',
     code: numericCodeForServerError(errorCode, status),
     errorCode,
     message,
@@ -152,9 +159,16 @@ function createTraceId(): string {
   return randomUUID().replace(/-/g, '');
 }
 
-function englishUpstreamMessage(message: string, errorCode: string): string {
+function englishUpstreamMessage(
+  message: string,
+  errorCode: string,
+  source: 'conversion' | 'pdf',
+  code: number,
+): string {
   if (!/[\u3400-\u9fff]/u.test(message)) return message;
-  return ENGLISH_UPSTREAM_MESSAGES[errorCode] ?? 'The processing service request failed.';
+  return processingErrorDefinition(source, code)?.message
+    ?? ENGLISH_UPSTREAM_MESSAGES[errorCode]
+    ?? 'The processing service request failed.';
 }
 
 const ENGLISH_UPSTREAM_MESSAGES: Readonly<Record<string, string>> = {

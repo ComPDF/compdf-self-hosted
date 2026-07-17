@@ -13,25 +13,6 @@ export const LANGUAGES: Language[] = [
   { code: 'es',    label: 'Español' },
 ];
 
-export interface DashboardLanguage extends Language {
-  settingsValue: string;
-}
-
-export const DASHBOARD_LANGUAGES: DashboardLanguage[] = LANGUAGES.map((lang) => ({
-  ...lang,
-  settingsValue: lang.code,
-}));
-
-export function dashboardLocaleToSettingsValue(code: string): DashboardLanguage['settingsValue'] {
-  const normalized = code.toLowerCase();
-  return DASHBOARD_LANGUAGES.find((lang) => lang.code === normalized)?.settingsValue ?? 'en';
-}
-
-export function settingsValueToDashboardLocale(value: string): string {
-  const normalized = value.toLowerCase();
-  return DASHBOARD_LANGUAGES.find((lang) => lang.settingsValue.toLowerCase() === normalized)?.code ?? 'en';
-}
-
 export const DEFAULT_LOCALE = 'en';
 const STORAGE_KEY = 'compdf-lang';
 

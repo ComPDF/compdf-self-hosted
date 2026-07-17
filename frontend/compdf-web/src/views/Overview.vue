@@ -289,14 +289,15 @@ function hoverLeft(index: number) {
             </div>
           </div>
           <Select :model-value="selectedRange" @update:model-value="onRangeUpdate">
-            <SelectTrigger data-test="overview-range-select" class="h-9 w-[148px] rounded-xl border-slate-200 bg-slate-50 text-xs font-bold text-stone-700 shadow-xs">
-              <SelectValue :placeholder="t('overview.range.placeholder')" />
+            <SelectTrigger data-test="overview-range-select" class="h-9 w-[148px] rounded-xl border-slate-200 bg-slate-50 text-xs font-semibold text-stone-700 shadow-xs">
+              <SelectValue class="text-xs" :placeholder="t('overview.range.placeholder')" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem
                 v-for="option in rangeOptions"
                 :key="option.value"
                 :value="option.value"
+                class="text-xs"
                 :data-test="`overview-range-${option.value === '24h' ? '24h' : option.value}`"
               >
                 {{ option.label }}

@@ -33,7 +33,7 @@ export class BrandingController {
   }
 
   /**
-   * Public brand config (siteName/logoUrl/themeColor/locale/darkMode/...) +
+   * Public brand config (siteName/logoUrl/themeColor/darkMode/...) +
    * the deployment API key plaintext. Same payload SpaController injects into
    * index.html in production — exposed as an endpoint so the frontend dev server
    * can fetch + inject it. The apiKey is the authoritative key the backend

@@ -126,29 +126,31 @@ Start the development stack:
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d --build compdf-infra compdf-app compdf-server
-docker compose -f docker-compose.dev.yml ps
 ```
 
-Server API URL:
+Open ComPDF Web and Dashboard:
+
+```bash
+cd frontend/compdf-web
+npm install
+npm run dev
+```
+
+Development URLs:
 
 ```text
-http://localhost:8080/api/v1/
+ComPDF Web: http://localhost:5173/
+Dashboard:  http://localhost:5173/admin
+Server API: http://localhost:8080/api/v1/
 ```
 
 You can also view the [Documentation](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en).
 
-Open ComPDF Web and Dashboard:
-
-```text
-ComPDF Web: http://localhost:8080/
-Dashboard:  http://localhost:8080/admin
-```
-
 ### 3. Check status and logs
 
 ```bash
-docker compose ps
-docker compose logs -f compdf-server
+docker compose -f docker-compose.dev.yml ps
+docker compose -f docker-compose.dev.yml logs -f compdf-infra compdf-app
 ```
 
 The production deployment stores persistent data in Docker volumes and mounts `./configs` into the server container.
@@ -228,11 +230,9 @@ consistent with the deployment topology.
 
 ## Documentation
 
-- Deployment Guide: [https://www.compdf.com/documentation](https://www.compdf.com/documentation?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en)
+- SDK Documentation: [https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en)
 
 - API Reference: [https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/api-reference-conversion?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en)
-
-- SDK Documentation: [https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview](https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en)
 
 ## Support
 
@@ -249,6 +249,6 @@ Have suggestions? [Start a discussion](https://github.com/ComPDF/compdf-self-hos
 <p align="center">
   <b>Built by the ComPDF team.</b><br>
   <a href="https://compdf.com?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en">Website</a> ·
-  <a href="https://www.compdf.com/guides/idp/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en">Docs</a> ·
+  <a href="https://www.compdf.com/guides/pdf-sdk/self-hosted-deployment/overview?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en">Docs</a> ·
   <a href="https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en">Enterprise Inquiries</a>
 </p>

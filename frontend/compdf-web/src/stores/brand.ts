@@ -14,7 +14,6 @@ export interface BrandConfig {
   siteName: string;
   logoUrl: string | null;
   themeColor: string;
-  locale: string;
   darkMode: boolean;
   upgradeBannerText: string | null;
   docUrl: string | null;
@@ -35,7 +34,6 @@ const FALLBACK: BrandConfig = {
   siteName: 'ComPDF Self-Hosted',
   logoUrl: DEFAULT_LOGO_URL,
   themeColor: '#1668ff',
-  locale: 'en',
   darkMode: false,
   upgradeBannerText: null,
   docUrl: DEFAULT_DOCUMENTATION_URL,
