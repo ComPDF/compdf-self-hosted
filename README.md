@@ -1,12 +1,12 @@
 [English](README.md) | [繁體中文](README_TW.md) | [简体中文](README_CN.md)
 
-# ComPDF Self-hosted — Open Source PDF Editor & PDF Converter
+# ComPDF Self-Hosted — Open Source PDF Editor & PDF Converter
 
-Part of the KDAN ecosystem, [ComPDF Self-hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_selfhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_selfhosted_newopen_en&ref_platform_id=github_compdf) offers PDF editing and document conversion, helping teams process PDFs, Office files, and images securely in private Docker deployments.
+Part of the KDAN ecosystem, [ComPDF Self-Hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_selfhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_selfhosted_newopen_en&ref_platform_id=github_compdf) offers PDF editing and document conversion, helping teams process PDFs, Office files, and images securely in private Docker deployments.
 
 
 
-> * If you find ComPDF Self-hosted useful, please consider giving us a ⭐ **Star** on GitHub. It helps us grow and improve.
+> * If you find ComPDF Self-Hosted useful, please consider giving us a ⭐ **Star** on GitHub. It helps us grow and improve.
 > * Got questions or ideas? Join the conversation in our [Discussions](https://github.com/ComPDF/compdf-self-hosted/discussions).
 
 <p align="center">
@@ -26,9 +26,9 @@ Part of the KDAN ecosystem, [ComPDF Self-hosted](https://www.compdf.com/self-hos
   <a href="https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en" target="_blank"><b>Enterprise →</b></a>
 </p>
 
-## Why ComPDF Self-hosted?
+## Why ComPDF Self-Hosted?
 
-Unlike traditional SDKs that require deep integration, ComPDF Self-hosted is a ready-to-deploy open-source PDF processing platform. It combines PDF editing and conversion capabilities, while also supporting image format conversion—covering the full spectrum from documents to images. This enables enterprises to quickly establish a fully controllable, self-owned document center.
+Unlike traditional SDKs that require deep integration, ComPDF Self-Hosted is a ready-to-deploy open-source PDF processing platform. It combines PDF editing and conversion capabilities, while also supporting image format conversion—covering the full spectrum from documents to images. This enables enterprises to quickly establish a fully controllable, self-owned document center.
 
 ### Key Advantages
 
@@ -38,7 +38,7 @@ Unlike traditional SDKs that require deep integration, ComPDF Self-hosted is a r
 * Private deployment with enterprise-ready architecture
 * Commercial support and dedicated assistance available
 
-Whether you're building an internal document platform, document automation workflow, or enterprise PDF service, ComPDF Self-hosted helps you get started in minutes.
+Whether you're building an internal document platform, document automation workflow, or enterprise PDF service, ComPDF Self-Hosted helps you get started in minutes.
 
 ## Features
 
@@ -57,7 +57,7 @@ ComPDF Self-Hosted provides a ready-to-use **open source PDF editor**, **open so
 
 ### 2. Dashboard Console
 
-ComPDF Self-hosted provides a unified management console for viewing API Key details, API usage, and License status, as well as supporting operation log auditing, account management, and core system configuration.
+ComPDF Self-Hosted provides a unified management console for viewing API Key details, API usage, and License status, as well as supporting operation log auditing, account management, and core system configuration.
 
 ![Dashboard](images/dashboard.png)
 
@@ -236,13 +236,13 @@ consistent with the deployment topology.
 
 ## Support
 
-Have suggestions? [Start a discussion](https://github.com/ComPDF/compdf-self-hosted/discussions). If you find **ComPDF Self-hosted** useful, please consider giving us a ⭐ **Star** on GitHub. It helps us grow and improve.
+Have suggestions? [Start a discussion](https://github.com/ComPDF/compdf-self-hosted/discussions). If you find **ComPDF Self-Hosted** useful, please consider giving us a ⭐ **Star** on GitHub. It helps us grow and improve.
 
 ## License
 
 - This project is licensed under the MIT License. See the LICENSE file for details.
 
-- [Contact Sales](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) for the Commercial / Enterprise licenses for ComPDF Self-hosted.
+- [Contact Sales](https://www.compdf.com/contact-sales?utm_source=github_ai_sefhosted_newopen_en&utm_medium=referral&utm_campaign=github_ai_sefhosted_newopen_en&ref_platform_id=github_compdf_en) for the Commercial / Enterprise licenses for ComPDF Self-Hosted.
 
 ---
 
