@@ -72,8 +72,9 @@ export class LoggingInterceptor implements NestInterceptor {
     const logType = isError ? 'error' : 'api_call';
     const level: LogLevel = status >= 500 ? 'ERROR' : status >= 400 ? 'ERROR' : 'INFO';
     const category = categorize(status, err);
-    const operator = req.user?.username ?? null;
-    // PRD §5: api_call logs record the API key. ApiKeyGuard stamps req.apiKeyId.
+    // Dashboard actions use the JWT user; tool API calls use the API key creator.
+    const operator = req.user?.username ?? req.apiKeyOwner ?? null;
+    // PRD §5: api_call logs record the API key. ApiKeyGuard stamps both fields.
     const apiKeyId = req.apiKeyId ?? null;
     const method = req.method ?? null;
     const endpoint = req.url ?? null;

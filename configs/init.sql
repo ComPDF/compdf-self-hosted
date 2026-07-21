@@ -38,15 +38,17 @@ CREATE TABLE IF NOT EXISTS api_keys (
   key_id     VARCHAR(32)  NOT NULL UNIQUE,      -- public key identifier for display
   key_hash   VARCHAR(255) NOT NULL,             -- hashed secret used for validation
   status     TINYINT     NOT NULL DEFAULT 1,
+  created_by_user_id BIGINT NULL,               -- Dashboard user that created/provisioned the key
   created_at DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_used_at DATETIME  NULL
+  last_used_at DATETIME  NULL,
+  INDEX idx_api_keys_creator (created_by_user_id)
 );
 
 -- Operation logs.
 CREATE TABLE IF NOT EXISTS operation_logs (
   id          BIGINT PRIMARY KEY AUTO_INCREMENT,
   log_type    VARCHAR(20)  NOT NULL,            -- user_action|api_call|error|system
-  operator    VARCHAR(50)  NULL,                -- NULL for API calls, 'system' for system events
+  operator    VARCHAR(50)  NULL,                -- API calls use the API key creator; 'system' for system events
   api_key_id  VARCHAR(32)  NULL,
   method      VARCHAR(10)  NULL,
   endpoint    VARCHAR(255) NULL,

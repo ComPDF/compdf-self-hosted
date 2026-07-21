@@ -17,6 +17,8 @@ export interface AdminPayload {
   role: string;
   /** Incremented on password change/reset; mismatches invalidate old JWTs. */
   ver: number;
+  /** Standard JWT issued-at timestamp, in whole seconds. */
+  iat?: number;
 }
 
 @Injectable()
@@ -44,15 +46,28 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   private async assertCurrentSession(payload: AdminPayload): Promise<void> {
-    if (!Number.isInteger(payload.sub) || !Number.isInteger(payload.ver)) {
+    if (
+      !Number.isInteger(payload.sub) ||
+      !Number.isInteger(payload.ver) ||
+      typeof payload.iat !== 'number' ||
+      !Number.isInteger(payload.iat)
+    ) {
       throw new Error('invalid token payload');
     }
-    const rows = await this.db.query<Array<{ status: number; token_version: number }>>(
-      'SELECT status, token_version FROM users WHERE id = ? LIMIT 1',
+    const rows = await this.db.query<Array<{ status: number; token_version: number; created_at: Date | string }>>(
+      'SELECT status, token_version, created_at FROM users WHERE id = ? LIMIT 1',
       [payload.sub],
     );
     const user = rows[0];
-    if (!user || user.status !== 1 || user.token_version !== payload.ver) {
+    const createdAtMs = user ? new Date(user.created_at).getTime() : Number.NaN;
+    const issuedAtMs = payload.iat * 1000;
+    if (
+      !user ||
+      user.status !== 1 ||
+      user.token_version !== payload.ver ||
+      !Number.isFinite(createdAtMs) ||
+      issuedAtMs < createdAtMs
+    ) {
       throw new Error('stale token');
     }
   }

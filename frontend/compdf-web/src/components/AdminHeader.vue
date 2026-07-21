@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { LogOut, ChevronDown, Home } from 'lucide-vue-next';
@@ -39,15 +39,12 @@ const titleMap: Record<string, string> = {
 
 const pageTitle = computed(() => t(titleMap[String(route.name ?? '')] ?? 'nav.overview'));
 
-function confirmLogout() {
+async function confirmLogout() {
   logoutOpen.value = false;
-  auth.logout();
+  await auth.logout();
   router.push({ name: 'login' });
 }
 
-onMounted(() => {
-  if (auth.isAuthenticated) void auth.refreshAvatar();
-});
 </script>
 
 <template>

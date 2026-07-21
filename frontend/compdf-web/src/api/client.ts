@@ -78,6 +78,7 @@ export interface StoredSession {
   username: string;
   role: string;
   mustChangePassword: boolean;
+  avatarUrl: string | null;
 }
 
 export function loadSession(): StoredSession | null {
@@ -112,6 +113,7 @@ function isAdminRoute(url: string | undefined): boolean {
   // branding) or use x-api-key (tool routes).
   return url.startsWith('/dashboard/') || url.startsWith('dashboard/')
     || url.startsWith('/auth/change-password') || url.startsWith('auth/change-password')
+    || url.startsWith('/auth/logout') || url.startsWith('auth/logout')
     || url.startsWith('/license/upload') || url.startsWith('license/upload');
 }
 

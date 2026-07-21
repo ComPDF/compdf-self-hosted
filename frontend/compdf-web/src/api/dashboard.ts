@@ -98,6 +98,7 @@ export interface RefreshedSession {
   token: string;
   username: string;
   role: string;
+  avatarUrl: string | null;
 }
 
 export type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'FATAL';
@@ -134,11 +135,10 @@ export const dashboardApi = {
   apiKeys: () => http.get<ApiKeyInfo[]>('/dashboard/api-keys').then((r) => r.data),
   version: () => http.get<VersionInfo>('/dashboard/version').then((r) => r.data),
   updateAccount: (username: string) => http.patch<RefreshedSession>('/dashboard/account', { username }).then((r) => r.data),
-  accountAvatar: () => http.get('/dashboard/account/avatar', { responseType: 'blob' }).then((r) => r.data as Blob),
   uploadAccountAvatar: (file: File) => {
     const form = new FormData();
     form.append('file', file);
-    return http.post<{ ok: true }>('/dashboard/account/avatar', form).then((r) => r.data);
+    return http.post<{ avatarUrl: string | null }>('/dashboard/account/avatar', form).then((r) => r.data);
   },
   getSettings: () => http.get<BrandSettings>('/dashboard/settings').then((r) => r.data),
   updateSettings: (patch: UpdateSettings) => http.put<BrandSettings>('/dashboard/settings', patch).then((r) => r.data),

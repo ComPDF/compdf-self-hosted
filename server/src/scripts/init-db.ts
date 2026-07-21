@@ -15,7 +15,7 @@
  * The script runs only when executed directly; importing it is side-effect free.
  */
 import { createPool, Pool } from 'mysql2/promise';
-import { existsSync, readFileSync, writeFileSync, chmodSync, mkdirSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync, chmodSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { ADMIN_PASSWORD, ADMIN_USERNAME, genApiKey, hashApiKey, hashPassword } from './credentials';
 
@@ -42,6 +42,55 @@ export interface EnsureDefaultAdminResult {
   username: string;
   password: string;
   inserted: boolean;
+}
+
+/** Add the API key creator column for deployments created before ownership tracking. */
+async function ensureApiKeyOwnershipSchema(pool: PoolLike): Promise<void> {
+  const [columns] = await pool.query<Array<{ c: number }>>(
+    `SELECT COUNT(*) AS c
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'api_keys' AND COLUMN_NAME = 'created_by_user_id'`,
+  );
+  if (Number(columns[0]?.c ?? 0) === 0) {
+    await pool.execute('ALTER TABLE api_keys ADD COLUMN created_by_user_id BIGINT NULL');
+  }
+}
+
+/** Existing deployment keys belong to the deployment administrator by default. */
+export async function bindUnownedApiKeysToDefaultAdmin(pool: PoolLike): Promise<void> {
+  const [admins] = await pool.query<Array<{ id: number }>>(
+    'SELECT id FROM users WHERE role = ? ORDER BY id ASC LIMIT 1',
+    ['admin'],
+  );
+  const adminId = admins[0]?.id;
+  if (!adminId) return;
+  await pool.execute(
+    'UPDATE api_keys SET created_by_user_id = ? WHERE created_by_user_id IS NULL',
+    [adminId],
+  );
+}
+
+/**
+ * Retain an uploaded avatar when a development database has been recreated but
+ * the host-mounted storage directory is still present. Existing profile data is
+ * never overwritten.
+ */
+export async function restoreAvatarPaths(pool: PoolLike): Promise<void> {
+  const avatarDir = join(process.env.STORAGE_DIR ?? join(process.cwd(), 'storage'), 'avatars');
+  let files: string[];
+  try {
+    files = readdirSync(avatarDir);
+  } catch {
+    return;
+  }
+  for (const file of files) {
+    const match = file.match(/^(\d+)\.(png|jpg|webp)$/);
+    if (!match) continue;
+    await pool.execute(
+      'UPDATE users SET avatar_path = ? WHERE id = ? AND avatar_path IS NULL',
+      [file, Number(match[1])],
+    );
+  }
 }
 
 /**
@@ -221,6 +270,7 @@ async function run(): Promise<void> {
     }
     const sql = readFileSync(sqlPath, 'utf8');
     await p.query(sql);
+    await ensureApiKeyOwnershipSchema(p as unknown as PoolLike);
     console.log('[init-db] schema applied (idempotent)');
 
     const admin = await ensureDefaultAdmin(p as unknown as PoolLike);
@@ -232,8 +282,10 @@ async function run(): Promise<void> {
     } else {
       console.log('[init-db] dashboard admin already present — skipping seed');
     }
+    await restoreAvatarPaths(p as unknown as PoolLike);
 
     const result = await ensureApiKey(p as unknown as PoolLike, process.env.API_KEY);
+    await bindUnownedApiKeysToDefaultAdmin(p as unknown as PoolLike);
     if (result === null) {
       console.log('[init-db] api key already present — skipping seed');
     } else if (result.fromEnv) {

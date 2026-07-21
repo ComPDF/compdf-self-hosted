@@ -26,7 +26,7 @@ import { ClientsModule } from '../clients/clients.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        secret: config.get<string>('jwt.secret') ?? 'change-me-in-prod',
+        secret: config.getOrThrow<string>('jwt.secret'),
       }),
     }),
   ],

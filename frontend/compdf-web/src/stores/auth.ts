@@ -1,6 +1,6 @@
 /**
  * Admin auth store. The login endpoint returns
- * `{ token, username, role, mustChangePassword }` (8h JWT). The session is
+ * `{ token, username, role, mustChangePassword, avatarUrl }` (8h JWT). The session is
  * persisted to localStorage and rehydrated on load; a 401 from any request
  * clears it and redirects to /admin/login (handled in api/client.ts).
  */
@@ -12,34 +12,23 @@ interface LoginResponse {
   username: string;
   role: string;
   mustChangePassword: boolean;
+  avatarUrl: string | null;
 }
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     session: null as StoredSession | null,
-    avatarUrl: null as string | null,
   }),
   getters: {
     isAuthenticated: (s) => !!s.session?.token,
     username: (s) => s.session?.username ?? '',
     role: (s) => s.session?.role ?? '',
     mustChangePassword: (s) => !!s.session?.mustChangePassword,
+    avatarUrl: (s) => s.session?.avatarUrl ?? null,
   },
   actions: {
     restore() {
       this.session = loadSession();
-    },
-    async refreshAvatar() {
-      try {
-        const { data } = await http.get<Blob>('/dashboard/account/avatar', {
-          responseType: 'blob',
-        });
-        if (this.avatarUrl) URL.revokeObjectURL(this.avatarUrl);
-        this.avatarUrl = URL.createObjectURL(data);
-      } catch {
-        if (this.avatarUrl) URL.revokeObjectURL(this.avatarUrl);
-        this.avatarUrl = null;
-      }
     },
     async login(username: string, password: string): Promise<LoginResponse> {
       const { data } = await http.post<LoginResponse>('/auth/login', { username, password });
@@ -48,6 +37,7 @@ export const useAuthStore = defineStore('auth', {
         username: data.username,
         role: data.role,
         mustChangePassword: data.mustChangePassword,
+        avatarUrl: data.avatarUrl,
       };
       saveSession(this.session);
       return data;
@@ -59,7 +49,7 @@ export const useAuthStore = defineStore('auth', {
         saveSession(this.session);
       }
     },
-    replaceSession(session: Pick<StoredSession, 'token' | 'username' | 'role'>) {
+    replaceSession(session: Pick<StoredSession, 'token' | 'username' | 'role' | 'avatarUrl'>) {
       const current = this.session ?? loadSession();
       this.session = {
         ...session,
@@ -67,9 +57,17 @@ export const useAuthStore = defineStore('auth', {
       };
       saveSession(this.session);
     },
-    logout() {
-      if (this.avatarUrl) URL.revokeObjectURL(this.avatarUrl);
-      this.avatarUrl = null;
+    setAvatar(avatarUrl: string | null) {
+      if (!this.session) return;
+      this.session.avatarUrl = avatarUrl;
+      saveSession(this.session);
+    },
+    async logout() {
+      try {
+        await http.post('/auth/logout');
+      } catch {
+        // A stale session still needs to be removed from this browser.
+      }
       this.session = null;
       clearSession();
     },

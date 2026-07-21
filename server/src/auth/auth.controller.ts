@@ -46,6 +46,13 @@ export class AuthController {
     return { ok: true };
   }
 
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@Req() req: Request & { user: AdminPayload }): Promise<{ ok: true }> {
+    await this.auth.logout(req.user);
+    return { ok: true };
+  }
+
   /** Public: whether the login page should show the built-in admin hint. */
   @Get('setup-status')
   setupStatus() {

@@ -104,9 +104,7 @@ const typeFilters = computed(() => [
   { v: 'system', l: t('logs.type.system') },
 ]);
 
-/** PRD §5: 操作人 — api_call→空, system→系统, 其余→username */
 function operatorOf(log: LogEntry): string {
-  if (log.logType === 'api_call') return '';
   if (log.logType === 'system') return t('common.system');
   return log.operator ?? '—';
 }

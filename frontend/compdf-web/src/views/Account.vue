@@ -52,8 +52,8 @@ async function uploadAvatar(event: Event) {
   }
   avatarUploading.value = true;
   try {
-    await dashboardApi.uploadAccountAvatar(file);
-    await auth.refreshAvatar();
+    const updated = await dashboardApi.uploadAccountAvatar(file);
+    auth.setAvatar(updated.avatarUrl);
     displayToast(t('account.avatarUpdated'));
   } catch {
     displayToast(t('account.avatarUploadFailed'), 'error');
@@ -63,7 +63,6 @@ async function uploadAvatar(event: Event) {
 }
 
 onMounted(async () => {
-  await auth.refreshAvatar();
   try {
     const res = await dashboardApi.loginRecords(1, 10);
     loginRecords.value = res.items;
@@ -145,8 +144,8 @@ async function changePassword() {
   }
 }
 
-function logout() {
-  auth.logout();
+async function logout() {
+  await auth.logout();
   router.push({ name: 'login' });
 }
 

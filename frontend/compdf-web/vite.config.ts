@@ -40,7 +40,7 @@ function devConfigPlugin(): Plugin {
   }
 
   const fallbackConfig = {
-    siteName: 'ComPDF Self-Hosted (dev)',
+    siteName: 'ComPDF Self-Hosted',
     logoUrl: null as string | null,
     themeColor: '#1668ff',
     darkMode: false,

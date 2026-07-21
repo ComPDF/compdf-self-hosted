@@ -3,7 +3,8 @@
  *
  * Clients send `x-api-key: <plaintext>`. The guard hashes it (sha256) and
  * looks up `api_keys` for an active row (status=1) whose key_hash matches.
- * On success it stamps `req.apiKeyId = key_id` (for logging/auditing) and
+ * On success it stamps `req.apiKeyId = key_id` and `req.apiKeyOwner` (the
+ * creating Dashboard user, for logging/auditing) and
  * returns true; on missing/invalid/revoked it throws 401.
  *
  * This is SEPARATE from JwtAuthGuard (admin sessions). It does NOT touch
@@ -19,6 +20,7 @@ interface ApiKeyRow {
   key_id: string;
   key_hash: string;
   status: number;
+  owner_username: string | null;
 }
 
 @Injectable()
@@ -36,7 +38,10 @@ export class ApiKeyGuard implements CanActivate {
     }
     const hash = createHash('sha256').update(raw.trim()).digest('hex');
     const rows = await this.mysql.query<ApiKeyRow[]>(
-      'SELECT key_id, key_hash, status FROM api_keys WHERE key_hash = ? LIMIT 1',
+      `SELECT api_keys.key_id, api_keys.key_hash, api_keys.status, users.username AS owner_username
+       FROM api_keys
+       LEFT JOIN users ON users.id = api_keys.created_by_user_id
+       WHERE api_keys.key_hash = ? LIMIT 1`,
       [hash],
     );
     const row = rows[0];
@@ -46,6 +51,7 @@ export class ApiKeyGuard implements CanActivate {
       throw new UnauthorizedException({ code: ErrorCode.UNAUTHORIZED, message: 'invalid or revoked api key' });
     }
     req.apiKeyId = row.key_id;
+    req.apiKeyOwner = row.owner_username;
     return true;
   }
 }

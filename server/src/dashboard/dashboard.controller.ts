@@ -20,7 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { join } from 'path';
-import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
 import { JwtAuthGuard, AdminPayload } from '../auth/guards/jwt-auth.guard';
 import { AuthService, RefreshedSession } from '../auth/auth.service';
 import { contentDispositionAttachment } from '../common/utils/filename';
@@ -122,24 +122,6 @@ export class DashboardController {
     return this.auth.refreshSession(req.user, dto.username ?? req.user.username);
   }
 
-  @Get('account/avatar')
-  async accountAvatar(
-    @Req() req: Request & { user: AdminPayload },
-    @Res() res: Response,
-  ): Promise<void> {
-    const avatarPath = await this.dashboard.getAvatarPath(req.user.sub);
-    if (!avatarPath) {
-      throw new NotFoundException({ code: 'NOT_FOUND', message: 'profile avatar not found' });
-    }
-    const avatarFile = join(this.storageDir, 'avatars', avatarPath);
-    if (!existsSync(avatarFile)) {
-      throw new NotFoundException({ code: 'NOT_FOUND', message: 'profile avatar file missing' });
-    }
-    res.set('Content-Type', avatarContentType(avatarPath));
-    res.set('Cache-Control', 'no-store');
-    res.status(200).send(readFileSync(avatarFile));
-  }
-
   @Post('account/avatar')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -155,7 +137,7 @@ export class DashboardController {
   async uploadAvatar(
     @UploadedFile() file: Express.Multer.File | undefined,
     @Req() req: Request & { user: AdminPayload },
-  ): Promise<{ ok: true }> {
+  ): Promise<{ avatarUrl: string | null }> {
     if (!file?.buffer || file.buffer.length === 0) {
       throw new BadRequestException({ code: 'VALIDATION_ERROR', message: 'avatar file is required' });
     }
@@ -175,7 +157,7 @@ export class DashboardController {
       filename,
       'Updated profile avatar.',
     );
-    return { ok: true };
+    return { avatarUrl: this.auth.getAvatarDataUrl(filename) };
   }
 
   @Get('settings')
@@ -248,12 +230,6 @@ function avatarExtension(mimetype: string): 'png' | 'jpg' | 'webp' {
   if (mimetype === 'image/jpeg') return 'jpg';
   if (mimetype === 'image/webp') return 'webp';
   return 'png';
-}
-
-function avatarContentType(path: string): string {
-  if (path.endsWith('.jpg')) return 'image/jpeg';
-  if (path.endsWith('.webp')) return 'image/webp';
-  return 'image/png';
 }
 
 /** Minimal RFC-4180 CSV encoder: quote fields containing comma/quote/newline. */

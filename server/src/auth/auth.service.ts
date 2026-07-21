@@ -15,6 +15,8 @@ import { BadRequestException, Injectable, Logger, UnauthorizedException } from '
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { existsSync, readFileSync } from 'fs';
+import { join } from 'path';
 import { MysqlClient } from '../clients/mysql.client';
 import { RedisClient } from '../clients/redis.client';
 import { ErrorCode } from '../common/errors/error-codes';
@@ -28,12 +30,14 @@ export interface LoginResult {
   username: string;
   role: string;
   mustChangePassword: boolean;
+  avatarUrl: string | null;
 }
 
 export interface RefreshedSession {
   token: string;
   username: string;
   role: string;
+  avatarUrl: string | null;
 }
 
 @Injectable()
@@ -41,6 +45,7 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   private readonly jwtSecret: string;
   private readonly jwtTtlSeconds: number;
+  private readonly storageDir: string;
 
   constructor(
     private readonly db: MysqlClient,
@@ -48,8 +53,9 @@ export class AuthService {
     private readonly jwt: JwtService,
     config: ConfigService,
   ) {
-    this.jwtSecret = config.get<string>('jwt.secret') ?? 'change-me-in-prod';
+    this.jwtSecret = config.getOrThrow<string>('jwt.secret');
     this.jwtTtlSeconds = 8 * 60 * 60; // 8h admin session
+    this.storageDir = config.get<string>('storageDir') ?? 'storage';
   }
 
   async login(
@@ -62,17 +68,19 @@ export class AuthService {
     await this.assertNotLocked(username, ip, ua);
 
     const rows = await this.db.query<
-      Array<{ id: number; username: string; password_hash: string; role: string; status: number; token_version: number; last_login_at: Date | null }>
-    >('SELECT id, username, password_hash, role, status, token_version, last_login_at FROM users WHERE username = ? LIMIT 1', [username]);
+      Array<{ id: number; username: string; password_hash: string; role: string; status: number; token_version: number; last_login_at: Date | null; avatar_path: string | null }>
+    >('SELECT id, username, password_hash, role, status, token_version, last_login_at, avatar_path FROM users WHERE username = ? LIMIT 1', [username]);
 
     const user = rows[0];
     if (!user) {
       await this.recordFailure(username);
       await this.recordLogin(username, 'fail', 'invalid_credentials', ip, ua);
+      await this.recordAuthEvent(username, 'login', 'fail', 'invalid', `Sign-in attempt for user "${username}" failed: invalid credentials.`);
       throw new UnauthorizedException({ code: ErrorCode.UNAUTHORIZED, message: 'invalid credentials' });
     }
     if (user.status !== 1) {
       await this.recordLogin(username, 'fail', 'user_disabled', ip, ua);
+      await this.recordAuthEvent(username, 'login', 'fail', 'invalid', `Sign-in attempt for user "${username}" failed: user disabled.`);
       throw new UnauthorizedException({ code: ErrorCode.UNAUTHORIZED, message: 'invalid credentials' });
     }
 
@@ -80,12 +88,14 @@ export class AuthService {
     if (!ok) {
       await this.recordFailure(username);
       await this.recordLogin(username, 'fail', 'invalid_credentials', ip, ua);
+      await this.recordAuthEvent(username, 'login', 'fail', 'invalid', `Sign-in attempt for user "${username}" failed: invalid credentials.`);
       throw new UnauthorizedException({ code: ErrorCode.UNAUTHORIZED, message: 'invalid credentials' });
     }
 
     await this.clearFailures(username);
     await this.db.execute('UPDATE users SET last_login_at = NOW() WHERE id = ?', [user.id]);
     await this.recordLogin(username, 'success', 'ok', ip, ua);
+    await this.recordAuthEvent(user.username, 'login', 'success', 'success', `User "${user.username}" signed in successfully.`);
 
     const token = await this.signSession({
       sub: user.id,
@@ -99,17 +109,42 @@ export class AuthService {
       username: user.username,
       role: user.role,
       mustChangePassword: user.last_login_at === null,
+      avatarUrl: this.getAvatarDataUrl(user.avatar_path),
     };
   }
 
   /** Issue a replacement JWT after a mutable account attribute changes. */
   async refreshSession(current: AdminPayload, username: string): Promise<RefreshedSession> {
     const { sub, role, ver } = current;
+    const avatarPath = await this.getAvatarPath(sub);
     return {
       token: await this.signSession({ sub, username, role, ver }),
       username,
       role,
+      avatarUrl: this.getAvatarDataUrl(avatarPath),
     };
+  }
+
+  /** Record a deliberate sign-out and invalidate the current Dashboard session. */
+  async logout(current: AdminPayload): Promise<void> {
+    await this.db.execute('UPDATE users SET token_version = token_version + 1 WHERE id = ?', [current.sub]);
+    await this.recordAuthEvent(current.username, 'logout', 'success', 'success', `User "${current.username}" signed out.`);
+  }
+
+  /** Avatar data is returned with the signed-in user information, never fetched separately. */
+  getAvatarDataUrl(avatarPath: string | null): string | null {
+    if (!avatarPath || !/^\d+\.(png|jpg|webp)$/.test(avatarPath)) return null;
+    const file = join(this.storageDir, 'avatars', avatarPath);
+    if (!existsSync(file)) return null;
+    try {
+      const mimeType = avatarPath.endsWith('.jpg') ? 'image/jpeg'
+        : avatarPath.endsWith('.webp') ? 'image/webp'
+          : 'image/png';
+      return `data:${mimeType};base64,${readFileSync(file).toString('base64')}`;
+    } catch (err) {
+      this.logger.warn(`Unable to read avatar data: ${(err as Error).message}`);
+      return null;
+    }
   }
 
   async changePassword(userId: number, oldPassword: string, newPassword: string): Promise<void> {
@@ -160,11 +195,20 @@ export class AuthService {
     const n = Number(await this.redis.get(`auth:fail:${username}`) ?? 0);
     if (n >= FAIL_THRESHOLD) {
       await this.recordLogin(username, 'fail', 'locked', ip, ua);
+      await this.recordAuthEvent(username, 'login', 'fail', 'invalid', `Sign-in attempt for user "${username}" failed: account temporarily locked.`);
       throw new UnauthorizedException({
         code: ErrorCode.UNAUTHORIZED,
         message: 'too many failed attempts, try again later',
       });
     }
+  }
+
+  private async getAvatarPath(userId: number): Promise<string | null> {
+    const rows = await this.db.query<Array<{ avatar_path: string | null }>>(
+      'SELECT avatar_path FROM users WHERE id = ? LIMIT 1',
+      [userId],
+    );
+    return rows[0]?.avatar_path ?? null;
   }
 
   private signSession(payload: AdminPayload): Promise<string> {
@@ -196,6 +240,22 @@ export class AuthService {
         [username.slice(0, 50), result, reason, ip, userAgent],
       )
       .catch((err: Error) => this.logger.warn(`login_records write failed: ${err.message}`));
+  }
+
+  private async recordAuthEvent(
+    username: string,
+    action: 'login' | 'logout',
+    result: 'success' | 'fail',
+    category: 'success' | 'invalid',
+    detail: string,
+  ): Promise<void> {
+    await this.db
+      .execute(
+        `INSERT INTO operation_logs (log_type, operator, level, result, result_category, action, target, message)
+         VALUES ('user_action', ?, ?, ?, ?, ?, ?, ?)`,
+        [username.slice(0, 50), result === 'success' ? 'INFO' : 'WARN', result, category, action, username.slice(0, 50), detail],
+      )
+      .catch((err: Error) => this.logger.warn(`authentication log write failed: ${err.message}`));
   }
 
   private async recordUserAction(
