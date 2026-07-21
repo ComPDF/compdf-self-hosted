@@ -2,7 +2,7 @@
 
 作為 KDAN 生態系的一部分，[ComPDF Self-Hosted](https://www.compdf.com/self-hosted-deployment?utm_source=github_ai_seLfhosted_newopen_tw&utm_medium=referral&utm_campaign=github_ai_seLfhosted_newopen_tw&ref_platform_id=github_compdf_tw) 提供自託管 PDF 編輯與文件轉檔能力，幫助團隊在私有 Docker 環境中安全處理 PDF、Office 文件與圖片。
 
-> * 如果您覺得 ComPDF Self-hosted 實用，請考慮在 GitHub 上為我們點一顆 ⭐ **Star**，這有助於我們成長與改進。
+> * 如果您覺得 ComPDF Self-Hosted 實用，請考慮在 GitHub 上為我們點一顆 ⭐ **Star**，這有助於我們成長與改進。
 > * 有任何問題或想法？歡迎加入我們的 [Discussions](https://github.com/ComPDF/compdf-self-hosted/discussions) 討論。
 
 <p align="center">
