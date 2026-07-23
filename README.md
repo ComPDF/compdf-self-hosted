@@ -51,8 +51,8 @@ ComPDF Self-Hosted provides a ready-to-use **open source PDF editor**, **open so
 | Category        | Features                                                                                                                                                                                                                                                |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | PDF Editing     | Merge PDF, Split PDF, Rotate PDF, Insert Pages, Delete Pages, Extract Pages, Add Watermark, Remove Watermark, Encrypt PDF, Decrypt PDF                                                                                                                  |
-| PDF to Others   | PDF to Word, PDF to Excel, PDF to Slide, PDF to Image (PNG, JPG, JPEG, JPEG2000, BMP, TIFF, TGA, GIF, WEBP), PDF to HTML, PDF to TXT, PDF to CSV, PDF to RTF, PDF to JSON, PDF to SearchablePDF, PDF to OFD, PDF to Markdown, Word to PDF, Excel to PDF |
-| Others to PDF   | Slide to PDF, HTML to PDF, TXT to PDF, CSV to PDF, RTF to PDF, PNG to PDF                                                                                                                                                                               |
+| PDF to Others   | PDF to Word, PDF to Excel, PDF to Slide, PDF to Image (PNG, JPG, JPEG, JPEG2000, BMP, TIFF, TGA, GIF, WEBP), PDF to HTML, PDF to TXT, PDF to CSV, PDF to RTF, PDF to JSON, PDF to SearchablePDF, PDF to OFD, PDF to Markdown |
+| Others to PDF   | Word to PDF, Excel to PDF, Slide to PDF, HTML to PDF, TXT to PDF, CSV to PDF, RTF to PDF, PNG to PDF                                                                                                                                                                               |
 | Image to Others | Image to Word, Image to Excel, Image to Slide, Image to HTML, Image to CSV, Image to TXT, Image to RTF, Images to JSON, Images to PDF                                                                                                                   |
 
 ### 2. Dashboard Console
@@ -65,7 +65,7 @@ ComPDF Self-Hosted provides a unified management console for viewing API Key det
 
 * Operation Logs: Track, search, and export all the operation logs.
 
-* Account Management: Set the user name and password.
+* Account Management: Set the username and password.
 
 * System Settings: Set the name, logo, and theme color of the system.
 
